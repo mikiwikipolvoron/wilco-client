@@ -1,5 +1,5 @@
-import { io, Socket } from 'socket.io-client';
 import type { ClientEvent, ServerEvent } from 'shared-types';
+import { io, type Socket } from 'socket.io-client';
 
 let socket: Socket | null = null;
 

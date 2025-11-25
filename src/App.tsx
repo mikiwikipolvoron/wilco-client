@@ -45,23 +45,13 @@ function App() {
 			<div style={{ textAlign: "center", width: "100%", maxWidth: "600px" }}>
 				{hasJoined ? (
 					<>
-						<h1 style={{ marginTop: "1rem" }}>Welcome, {nickname}!</h1>
-						<p style={{ fontSize: "1.25rem", marginTop: "0.5rem" }}>
+                        <h1 className="mt-4">Welcome, {nickname}!</h1>
+						<p className="text-xl mt-2">
 							Please look at the entertainer screen for instructions.
 						</p>
 
 						<div
-							style={{
-								display: "flex",
-								flexDirection: "row",
-								flexWrap: "nowrap",
-								justifyContent: "center",
-								alignItems: "center",
-								gap: "1rem",
-								marginTop: "1.5rem",
-								position: "relative",
-								width: "100%",
-							}}
+                            className="flex flex-row flex-nowrap justify-center items-center align-middle gap-4 mt-6 relative w-full"
 						>
 							{/* 💖 */}
 							<div style={{ padding: "0.5rem" }}>
@@ -76,15 +66,9 @@ function App() {
 											emoji: "💖",
 										});
 									}}
+                                    className="text-5xl bg-transparent border-none p-0 m-0 cursor-pointer outline-none"
 									style={{
-										fontSize: "3rem",
-										background: "transparent",
-										border: "none",
-										padding: 0,
-										margin: 0,
 										lineHeight: 1,
-										cursor: "pointer",
-										outline: "none",
 										WebkitTapHighlightColor: "transparent",
 									}}
 								>
@@ -93,7 +77,7 @@ function App() {
 							</div>
 
 							{/* 🐬 */}
-							<div style={{ padding: "0.5rem" }}>
+							<div className="p-2">
 								<button
 									type="button"
 									onClick={(event) => {
@@ -105,15 +89,9 @@ function App() {
 											emoji: "🐬",
 										});
 									}}
+                                    className="text-5xl bg-transparent border-none p-0 m-0 cursor-pointer outline-none"
 									style={{
-										fontSize: "3rem",
-										background: "transparent",
-										border: "none",
-										padding: 0,
-										margin: 0,
 										lineHeight: 1,
-										cursor: "pointer",
-										outline: "none",
 										WebkitTapHighlightColor: "transparent",
 									}}
 								>
@@ -134,15 +112,9 @@ function App() {
 											emoji: "🙏",
 										});
 									}}
+                                    className="text-5xl bg-transparent border-none p-0 m-0 cursor-pointer outline-none"
 									style={{
-										fontSize: "3rem",
-										background: "transparent",
-										border: "none",
-										padding: 0,
-										margin: 0,
 										lineHeight: 1,
-										cursor: "pointer",
-										outline: "none",
 										WebkitTapHighlightColor: "transparent",
 									}}
 								>
@@ -154,7 +126,7 @@ function App() {
 				) : (
 					<>
 						<h1>Join WILCO</h1>
-						<p style={{ fontSize: "16px", marginTop: "0.5rem" }}>
+						<p className="text-base mt-2">
 							Enter a nickname to join the pre-concert experience.
 						</p>
 
@@ -164,21 +136,13 @@ function App() {
 								placeholder="Your nickname"
 								value={nickname}
 								onChange={(event) => setNickname(event.target.value)}
-								style={{
-									padding: "0.5rem",
-									fontSize: "16px",
-									minWidth: "200px",
-								}}
+                                className="text-base p-2 min-w-[200px]"
 							/>
 							<div style={{ marginTop: "1rem" }}>
 								<button
 									type="submit"
 									disabled={nickname.trim().length === 0}
-									style={{
-										padding: "0.5rem 1rem",
-										fontSize: "16px",
-										cursor: "pointer",
-									}}
+                                    className="pt-2 pb-2 pr-4 pl-4 text-base cursor-pointer"
 								>
 									Join
 								</button>
@@ -188,15 +152,7 @@ function App() {
 				)}
 			</div>
 			<div
-				style={{
-					position: "absolute",
-					top: 0,
-					left: 0,
-					width: "100%",
-					height: "100%",
-					pointerEvents: "none",
-					overflow: "hidden",
-				}}
+                className="absolute top-0 left-0 w-full h-full pointer-events-none overflow-hidden"
 			>
 				{floatingEmojis.map((item) => (
 					<div
