@@ -1,9 +1,8 @@
-import { useBeatsStore } from "../lib/stores/useBeatsStore";
+import { useEffect, useState } from "react";
 import { useBeatsSync } from "../lib/hooks/useBeatsSync";
+import { useBeatsStore } from "../lib/stores/useBeatsStore";
 import { useServerStore } from "../lib/stores/useServerStore";
 import { useSocketStore } from "../lib/stores/useSocketStore";
-import { emitClientEvent } from "../lib/socket";
-import { useState, useEffect } from "react";
 
 // Team color mapping
 const TEAM_COLORS = {
@@ -16,6 +15,7 @@ const TEAM_COLORS = {
 export default function TapBeatsScreen() {
 	useBeatsSync();
 	const { phase, round, personalAccuracy, teamAccuracy } = useBeatsStore();
+	const { emit } = useSocketStore();
 	const players = useServerStore((state) => state.players);
 	const socket = useSocketStore((state) => state.socket);
 	const [tapAnimation, setTapAnimation] = useState(false);
@@ -30,8 +30,8 @@ export default function TapBeatsScreen() {
 		const timestamp = performance.now();
 
 		// Send tap to server
-		emitClientEvent({
-			type: "tap_beat",
+		emit({
+			type: "tap",
 			timestamp,
 		});
 
@@ -45,7 +45,13 @@ export default function TapBeatsScreen() {
 	}
 
 	if (phase === "results") {
-		return <ResultsPhase personalAccuracy={personalAccuracy} teamAccuracy={teamAccuracy} teamColor={myColor} />;
+		return (
+			<ResultsPhase
+				personalAccuracy={personalAccuracy}
+				teamAccuracy={teamAccuracy}
+				teamColor={myColor}
+			/>
+		);
 	}
 
 	// beat_on or beat_off phases
@@ -99,7 +105,13 @@ export default function TapBeatsScreen() {
 	);
 }
 
-function InstructionsPhase({ teamColor, teamId }: { teamColor: string; teamId: string }) {
+function InstructionsPhase({
+	teamColor,
+	teamId,
+}: {
+	teamColor: string;
+	teamId: string;
+}) {
 	const [showColor, setShowColor] = useState(true);
 
 	useEffect(() => {
@@ -163,10 +175,7 @@ function ResultsPhase({
 			<div className="text-center space-y-12">
 				<div className="text-7xl font-bold mb-8">Results</div>
 
-				<div
-					className="text-9xl font-bold mb-4"
-					style={{ color: teamColor }}
-				>
+				<div className="text-9xl font-bold mb-4" style={{ color: teamColor }}>
 					{Math.round(personalAccuracy * 100)}%
 				</div>
 
@@ -174,7 +183,9 @@ function ResultsPhase({
 
 				<div className="mt-16 bg-white/10 backdrop-blur-sm rounded-2xl p-8">
 					<div className="text-2xl mb-4">Team Average</div>
-					<div className="text-6xl font-bold">{Math.round(teamAccuracy * 100)}%</div>
+					<div className="text-6xl font-bold">
+						{Math.round(teamAccuracy * 100)}%
+					</div>
 					<div className="text-xl mt-6">
 						{isAboveTeamAverage ? (
 							<span className="text-green-400">✓ Above team average!</span>

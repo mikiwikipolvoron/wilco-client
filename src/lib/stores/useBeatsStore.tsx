@@ -1,5 +1,5 @@
+import type { BeatsPhase } from "@wilco/shared/data";
 import { create } from "zustand";
-import type { BeatsPhase } from "wilco-msgs/src/beats";
 
 interface BeatsStore {
 	// Current state
@@ -15,7 +15,8 @@ interface BeatsStore {
 	// Actions
 	setPhase: (phase: BeatsPhase, round: number, bpm: number) => void;
 	addTap: (timestamp: number) => void;
-	updateAccuracy: (personal: number, team: number) => void;
+	updatePersonalAccuracy: (personal: number) => void;
+	updateTeamAccuracy: (team: number) => void;
 	reset: () => void;
 }
 
@@ -33,14 +34,19 @@ export const useBeatsStore = create<BeatsStore>((set) => ({
 
 	setPhase: (phase, round, bpm) => set({ phase, round, bpm }),
 
-	addTap: (timestamp) => set((state) => ({
-		taps: [...state.taps, timestamp]
-	})),
+	addTap: (timestamp) =>
+		set((state) => ({
+			taps: [...state.taps, timestamp],
+		})),
 
-	updateAccuracy: (personal, team) => set({
-		personalAccuracy: personal,
-		teamAccuracy: team
-	}),
+	updateTeamAccuracy: (team) =>
+		set({
+			teamAccuracy: team,
+		}),
+	updatePersonalAccuracy: (personal) =>
+		set({
+			personalAccuracy: personal,
+		}),
 
 	reset: () => set(initialState),
 }));

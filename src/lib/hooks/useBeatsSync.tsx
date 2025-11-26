@@ -1,21 +1,21 @@
+import { SERVER_BEATS_EVENTS, type ServerEvent } from "@wilco/shared/events";
 import { useEffect } from "react";
-import { useSocketStore } from "../stores/useSocketStore";
 import { useBeatsStore } from "../stores/useBeatsStore";
-import type { ServerEvent } from "wilco-msgs/src/event";
+import { useSocketStore } from "../stores/useSocketStore";
 
 export function useBeatsSync() {
 	const socket = useSocketStore((state) => state.socket);
-	const { setPhase } = useBeatsStore();
+	const { setPhase, updateTeamAccuracy, updatePersonalAccuracy } = useBeatsStore();
 
 	useEffect(() => {
 		if (!socket) return;
 
 		function handleServerEvent(event: ServerEvent) {
 			// Only handle beats-related events
-			if (event.activity !== "beats") return;
+			if (!SERVER_BEATS_EVENTS.some((et) => et === event.type)) return;
 
 			switch (event.type) {
-				case "phase_change":
+				case "beat_phase_change":
 					setPhase(event.phase, event.round, event.bpm);
 					break;
 
