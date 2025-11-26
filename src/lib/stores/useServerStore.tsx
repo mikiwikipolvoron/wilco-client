@@ -3,7 +3,7 @@ import type {
 	GroupDefinitions,
 	Player,
 	ServerState,
-} from "wilco-msgs";
+} from "@wilco/shared/data";
 import { create } from "zustand";
 
 interface ServerStore extends ServerState {
@@ -12,11 +12,15 @@ interface ServerStore extends ServerState {
 	groups?: GroupDefinitions;
     connected: boolean;
 
+    // UI-side state
+    nickname?: string;
+
     _handlePlayerJoined: (player: Player) => void;
     _handlePlayerLeft: (playerId: string) => void;
     _handleActivityStarted: (activity: ActivityId) => void;
     _handleGroupsUpdated: (groups: GroupDefinitions) => void;
     _setConnected: (connected: boolean) => void;
+    setNickname: (nickname: string) => void;
 }
 
 const initialState = {
@@ -25,6 +29,7 @@ const initialState = {
     groups: undefined,
     connected: false,
     lastReaction: undefined,
+    nickname: undefined,
 };
 
 export const useServerStore = create<ServerStore>((set) => ({
@@ -44,4 +49,6 @@ export const useServerStore = create<ServerStore>((set) => ({
     _handleGroupsUpdated: (groups) => set({ groups }),
     
     _setConnected: (connected) => set({ connected }),
+
+    setNickname: (nickname) => set({nickname: nickname}),
 }))

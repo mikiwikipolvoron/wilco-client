@@ -1,5 +1,5 @@
+import type { ServerEvent } from "@wilco/shared/events";
 import { useEffect } from "react";
-import type { ServerEvent } from "wilco-msgs";
 import { useServerStore } from "../stores/useServerStore";
 import { useSocketStore } from "../stores/useSocketStore";
 
@@ -16,7 +16,7 @@ export function useServerSync() {
 
 	useEffect(() => {
 		if (!socket) return;
-        const store = useServerStore.getState();
+		const store = useServerStore.getState();
 		// If you're adding more types to ServerServiceEvent, it helps to change
 		// below the `ServerEvent` to `ServerServiceEvent` temporarily to get
 		// good suggestions and change it back afterwards!

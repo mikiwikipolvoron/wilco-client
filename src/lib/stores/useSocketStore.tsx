@@ -1,32 +1,46 @@
+import type { ClientEvent } from "@wilco/shared/events";
 import { io, type Socket } from "socket.io-client";
-import type { ClientEvent } from "wilco-msgs";
 import { create } from "zustand";
 
+const SERVER_URL = `http://localhost:4000`;
+console.log(SERVER_URL)
 interface SocketStore {
 	socket: Socket | null;
-	connect: (url: string) => void;
+	connect: () => void;
 	disconnect: () => void;
-	emit: (event: string, data: ClientEvent) => void;
+	emit: (data: ClientEvent) => void;
 }
+
+let socketInstance: Socket | null = null;
 
 const useSocketStore = create<SocketStore>((set, get) => ({
 	socket: null,
 
-	connect: (url: string) => {
-		const socket = io(url);
-		set({ socket });
+	connect: () => {
+		if (socketInstance?.connected) {
+			console.log("[Socket] Reusing existing connection");
+			set({ socket: socketInstance });
+			return;
+		}
+
+		if (socketInstance) {
+			socketInstance.disconnect();
+		}
+
+		socketInstance = io(SERVER_URL);
+		set({ socket: socketInstance });
 	},
 
 	disconnect: () => {
-		const socket = get().socket;
-		if (socket) {
-			socket.disconnect();
+		if (socketInstance) {
+			socketInstance?.disconnect();
+			socketInstance = null;
 			set({ socket: null });
 		}
 	},
 
-	emit: (event, data) => {
-		get().socket?.emit(event, data);
+	emit: (data) => {
+		get().socket?.emit("client_event", data);
 	},
 }));
 
