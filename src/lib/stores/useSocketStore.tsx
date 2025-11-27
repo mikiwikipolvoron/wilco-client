@@ -2,7 +2,7 @@ import type { ClientEvent } from "@wilco/shared/events";
 import { io, type Socket } from "socket.io-client";
 import { create } from "zustand";
 
-const SERVER_URL = `http://localhost:4000`;
+const SERVER_URL = `http://192.168.0.7:4000`;
 console.log(SERVER_URL)
 interface SocketStore {
 	socket: Socket | null;

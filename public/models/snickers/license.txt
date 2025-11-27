@@ -1,0 +1,11 @@
+Model Information:
+* title:	Snickers
+* source:	https://sketchfab.com/3d-models/snickers-fdb17b0ce0ae4bb9a896de87dea86d75
+* author:	eyes360vr (https://sketchfab.com/eyes360vr)
+
+Model License:
+* license type:	CC-BY-4.0 (http://creativecommons.org/licenses/by/4.0/)
+* requirements:	Author must be credited. Commercial use is allowed.
+
+If you use this 3D model in your project be sure to copy paste this credit wherever you share it:
+This work is based on "Snickers" (https://sketchfab.com/3d-models/snickers-fdb17b0ce0ae4bb9a896de87dea86d75) by eyes360vr (https://sketchfab.com/eyes360vr) licensed under CC-BY-4.0 (http://creativecommons.org/licenses/by/4.0/)

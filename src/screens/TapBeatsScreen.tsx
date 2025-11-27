@@ -65,12 +65,11 @@ export default function TapBeatsScreen() {
 				Round {round}/3
 			</div>
 
-			{/* Main tap button */}
+			{/* Main tap button - CIRCLE */}
 			<div className="flex-1 flex items-center justify-center">
-				<button
-					type="button"
+				<div
 					onClick={handleTap}
-					className="rounded-full transition-all duration-200 flex items-center justify-center text-white text-8xl font-bold shadow-2xl active:scale-95 border-4 border-white"
+					className="rounded-full transition-all duration-200 flex items-center justify-center text-white text-8xl font-bold shadow-2xl active:scale-95 border-4 border-white cursor-pointer select-none"
 					style={{
 						width: tapAnimation ? "320px" : "300px",
 						height: tapAnimation ? "320px" : "300px",
@@ -81,22 +80,16 @@ export default function TapBeatsScreen() {
 					}}
 				>
 					TAP
-				</button>
+				</div>
 			</div>
 
-			{/* Stats display */}
+			{/* Stats display - Only personal accuracy */}
 			<div className="absolute bottom-12 w-full px-8">
-				<div className="grid grid-cols-2 gap-6 max-w-md mx-auto">
-					<div className="bg-white/10 backdrop-blur-sm rounded-xl p-6 text-center">
-						<div className="text-white/60 text-sm mb-2">Your Accuracy</div>
-						<div className="text-white text-4xl font-bold">
+				<div className="max-w-md mx-auto">
+					<div className="bg-white/10 backdrop-blur-sm rounded-xl p-8 text-center">
+						<div className="text-white/60 text-lg mb-3">Your Accuracy</div>
+						<div className="text-white text-6xl font-bold">
 							{Math.round(personalAccuracy * 100)}%
-						</div>
-					</div>
-					<div className="bg-white/10 backdrop-blur-sm rounded-xl p-6 text-center">
-						<div className="text-white/60 text-sm mb-2">Team {myGroupId}</div>
-						<div className="text-white text-4xl font-bold">
-							{Math.round(teamAccuracy * 100)}%
 						</div>
 					</div>
 				</div>
@@ -115,10 +108,10 @@ function InstructionsPhase({
 	const [showColor, setShowColor] = useState(true);
 
 	useEffect(() => {
-		// Show team color for 8 seconds, then fade to instructions
+		// Show team color for 15 seconds, then fade to instructions
 		const timer = setTimeout(() => {
 			setShowColor(false);
-		}, 8000);
+		}, 15000);
 
 		return () => clearTimeout(timer);
 	}, []);
@@ -141,15 +134,12 @@ function InstructionsPhase({
 			className="w-screen h-screen flex flex-col items-center justify-center text-white p-8"
 			style={{ backgroundColor: "#1a1a2e" }}
 		>
-			<div className="max-w-2xl text-center space-y-6">
-				<div className="text-6xl font-bold mb-8" style={{ color: teamColor }}>
-					You are Team {teamId}
+			<div className="max-w-2xl text-center space-y-8">
+				<div className="text-5xl font-bold leading-tight">
+					Look at the entertainer screen to understand the game
 				</div>
-				<div className="text-3xl leading-relaxed">
-					Look at the entertainer screen for instructions
-				</div>
-				<div className="text-5xl font-bold animate-pulse mt-12">
-					Get ready...
+				<div className="text-4xl font-bold animate-pulse mt-12" style={{ color: teamColor }}>
+					Get ready to tap!
 				</div>
 			</div>
 		</div>
