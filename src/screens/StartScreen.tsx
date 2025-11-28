@@ -1,9 +1,8 @@
-import { EmojiPicker } from "frimousse";
 import { useState } from "react";
 import { useServerStore } from "../lib/stores/useServerStore";
 import { useSocketStore } from "../lib/stores/useSocketStore";
 
-function LobbyScreen() {
+function StartScreen() {
 	const { nickname } = useServerStore();
 	const { emit } = useSocketStore();
 	const [hearts, setHearts] = useState(0);
@@ -36,10 +35,11 @@ function LobbyScreen() {
 			className={`min-h-screen w-full flex flex-col align-middle items-center justify-center pt-0 pl-4 pr-4 overflow-y-auto overflow-x-hidden font-sans box-border`}
 		>
 			<div style={{ textAlign: "center", width: "100%", maxWidth: "600px" }}>
-				<h1 className="mt-4">More activities in a few moments!</h1>
-				<h2 className="mt-4">
-					Show the crowd how you like the games, {nickname}!
-				</h2>
+				<h1 className="mt-4">Welcome, {nickname}!</h1>
+				<p className="text-xl mt-2">
+					Please look at the entertainer screen for instructions.
+				</p>
+
 				<div className="flex flex-row flex-nowrap justify-center items-center align-middle gap-4 mt-6 relative w-full">
 					{/* 💖 */}
 					<div style={{ padding: "0.5rem" }}>
@@ -132,4 +132,4 @@ function LobbyScreen() {
 	);
 }
 
-export default LobbyScreen;
+export default StartScreen;
