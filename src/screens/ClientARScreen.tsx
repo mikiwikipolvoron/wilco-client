@@ -1,9 +1,9 @@
 import { useEffect, useRef, useState } from "react";
-import { useARStore } from "../lib/stores/useARStore";
-import { useSocketStore } from "../lib/stores/useSocketStore";
-import { useARSync } from "../lib/hooks/useARSync";
 import * as THREE from "three";
 import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
+import { useARSync } from "../lib/hooks/useARSync";
+import { useARStore } from "../lib/stores/useARStore";
+import { useSocketStore } from "../lib/stores/useSocketStore";
 
 export default function ClientARScreen() {
 	const { phase, isAnchored, items } = useARStore();
@@ -13,8 +13,14 @@ export default function ClientARScreen() {
 	const [cameraReady, setCameraReady] = useState(false);
 	const [gyroReady, setGyroReady] = useState(false);
 	const [debugInfo, setDebugInfo] = useState<string>("Initializing...");
-	const [orientation, setOrientation] = useState({ alpha: 0, beta: 0, gamma: 0 });
-	const [calibratedHeading, setCalibratedHeading] = useState<number | null>(null);
+	const [orientation, setOrientation] = useState({
+		alpha: 0,
+		beta: 0,
+		gamma: 0,
+	});
+	const [calibratedHeading, setCalibratedHeading] = useState<number | null>(
+		null,
+	);
 	const [calibratedBeta, setCalibratedBeta] = useState<number | null>(null); // Surface level (tilt)
 	const [showCalibrationPrompt, setShowCalibrationPrompt] = useState(false);
 
@@ -65,8 +71,8 @@ export default function ClientARScreen() {
 					video: {
 						facingMode: "environment",
 						width: { ideal: 1280 },
-						height: { ideal: 720 }
-					}
+						height: { ideal: 720 },
+					},
 				});
 
 				if (videoRef.current) {
@@ -88,7 +94,7 @@ export default function ClientARScreen() {
 			// Cleanup camera
 			if (videoRef.current && videoRef.current.srcObject) {
 				const stream = videoRef.current.srcObject as MediaStream;
-				stream.getTracks().forEach(track => track.stop());
+				stream.getTracks().forEach((track) => track.stop());
 			}
 		};
 	}, []);
@@ -99,10 +105,14 @@ export default function ClientARScreen() {
 
 		const requestGyroPermission = async () => {
 			// iOS 13+ requires permission
-			if (typeof (DeviceOrientationEvent as any).requestPermission === 'function') {
+			if (
+				typeof (DeviceOrientationEvent as any).requestPermission === "function"
+			) {
 				try {
-					const permission = await (DeviceOrientationEvent as any).requestPermission();
-					if (permission === 'granted') {
+					const permission = await (
+						DeviceOrientationEvent as any
+					).requestPermission();
+					if (permission === "granted") {
 						console.log("[ARScreen] ✅ Gyroscope permission granted!");
 						setGyroReady(true);
 						startOrientationTracking();
@@ -125,28 +135,29 @@ export default function ClientARScreen() {
 		const startOrientationTracking = () => {
 			const handleOrientation = (event: DeviceOrientationEvent) => {
 				setOrientation({
-					alpha: event.alpha || 0,  // Z-axis rotation (0-360)
-					beta: event.beta || 0,    // X-axis rotation (-180 to 180)
-					gamma: event.gamma || 0   // Y-axis rotation (-90 to 90)
+					alpha: event.alpha || 0, // Z-axis rotation (0-360)
+					beta: event.beta || 0, // X-axis rotation (-180 to 180)
+					gamma: event.gamma || 0, // Y-axis rotation (-90 to 90)
 				});
 			};
 
-			window.addEventListener('deviceorientation', handleOrientation);
+			window.addEventListener("deviceorientation", handleOrientation);
 			setDebugInfo("Gyroscope active!");
 
 			return () => {
-				window.removeEventListener('deviceorientation', handleOrientation);
+				window.removeEventListener("deviceorientation", handleOrientation);
 			};
 		};
 
 		// Auto-request on Android, wait for user button on iOS
-		if (typeof (DeviceOrientationEvent as any).requestPermission !== 'function') {
+		if (
+			typeof (DeviceOrientationEvent as any).requestPermission !== "function"
+		) {
 			requestGyroPermission();
 		}
 
 		// Store the permission function for later use (iOS button click)
 		(window as any).requestGyroPermission = requestGyroPermission;
-
 	}, []);
 
 	// Initialize Three.js scene
@@ -165,7 +176,7 @@ export default function ClientARScreen() {
 			45,
 			window.innerWidth / window.innerHeight,
 			0.1,
-			1000
+			1000,
 		);
 		camera.position.set(0, 0, 0);
 		cameraRef.current = camera;
@@ -174,7 +185,7 @@ export default function ClientARScreen() {
 		const renderer = new THREE.WebGLRenderer({
 			canvas: canvasRef.current,
 			alpha: true,
-			antialias: true
+			antialias: true,
 		});
 		renderer.setSize(window.innerWidth, window.innerHeight);
 		renderer.setClearColor(0x000000, 0); // Transparent
@@ -198,7 +209,7 @@ export default function ClientARScreen() {
 				rendererRef.current.setSize(window.innerWidth, window.innerHeight);
 			}
 		};
-		window.addEventListener('resize', handleResize);
+		window.addEventListener("resize", handleResize);
 
 		// Animation loop
 		const animate = () => {
@@ -210,7 +221,7 @@ export default function ClientARScreen() {
 		animate();
 
 		return () => {
-			window.removeEventListener('resize', handleResize);
+			window.removeEventListener("resize", handleResize);
 			renderer.dispose();
 		};
 	}, []);
@@ -237,8 +248,7 @@ export default function ClientARScreen() {
 		const gammaRad = THREE.MathUtils.degToRad(orientation.gamma);
 
 		// Apply rotations to camera only - items stay in place
-		camera.rotation.set(betaRad, alphaRad, -gammaRad, 'YXZ');
-
+		camera.rotation.set(betaRad, alphaRad, -gammaRad, "YXZ");
 	}, [orientation, gyroReady]);
 
 	// Spawn 3D items randomly around the player (not in a circle)
@@ -257,7 +267,7 @@ export default function ClientARScreen() {
 		if (!newItem) {
 			// All items already spawned, check for removal
 			itemMeshesRef.current.forEach((mesh, id) => {
-				const stillExists = items.some(item => item.id === id);
+				const stillExists = items.some((item) => item.id === id);
 				if (!stillExists) {
 					// Animate removal (poof effect)
 					animateItemRemoval(mesh, () => {
@@ -269,13 +279,6 @@ export default function ClientARScreen() {
 			return;
 		}
 
-		// LIVE tilt restriction (must be between 40° and 110°)
-		if (orientation.beta < 40 || orientation.beta > 110) {
-			console.warn(`[AR] Skipping spawn — LIVE beta = ${orientation.beta.toFixed(1)}°`);
-			return;
-		}
-
-
 		// Spawn only the new item
 		const item = newItem;
 
@@ -285,58 +288,36 @@ export default function ClientARScreen() {
 				const model = gltf.scene;
 
 				let x: number, y: number, z: number;
-				// Restrict NORMAL item spawning to beta 40–110°
-				if (item.type !== "boss") {
-					if (calibratedBeta < 40 || calibratedBeta > 110) {
-						console.warn(`[AR] Skip spawn — calibrated beta ${calibratedBeta.toFixed(1)}° outside 40–110°`);
-						return;
-					}
-				}
 
 				if (item.type === "boss") {
-					// Boss: ALWAYS at Y=0 (chest height), toward calibrated stage direction
-					// FIXED: Use proper compass-to-Three.js coordinate conversion
-					const distance = 40; // 15 meters toward stage
+					// Boss: ALWAYS at chest height, toward calibrated stage direction
+					const distance = 12; // 12 meters toward stage (visible but imposing)
 
 					// Convert compass heading to Three.js coordinates
-					const angleInThreeJS = -THREE.MathUtils.degToRad(calibratedHeading) + Math.PI / 2;
+					const angleInThreeJS =
+						-THREE.MathUtils.degToRad(calibratedHeading) + Math.PI / 2;
 
 					x = Math.cos(angleInThreeJS) * distance;
-					y = 0; // ALWAYS at chest height (Y=0)
+					y = 1.5; // Chest/head height for boss (1.5 meters)
 					z = Math.sin(angleInThreeJS) * distance;
 
-					console.log(`[ARScreen] Boss positioned at Y=0, compass ${calibratedHeading.toFixed(0)}° at (${x.toFixed(1)}, ${y.toFixed(1)}, ${z.toFixed(1)})`);
+					console.log(
+						`[ARScreen] Boss positioned at Y=${y}, compass ${calibratedHeading.toFixed(0)}° at (${x.toFixed(1)}, ${y.toFixed(1)}, ${z.toFixed(1)})`,
+					);
 				} else {
-				// LIVE tilt restriction — only spawn when beta is between 40° and 110°
-				if (orientation.beta < 40 || orientation.beta > 110) {
-					console.warn(`[AR] Skipping spawn — Current beta = ${orientation.beta.toFixed(1)}°`);
-					return;
-				}
+					// Regular items: spawn in visible range around player
+					// DISTANCE — 15-25 meters from player (visible but not too close)
+					const radius = 15 + Math.random() * 20; // 15-25 meters
 
-				// DEPTH — biased probability
-				let minRadius, maxRadius;
-				const r = Math.random();
+					// HORIZONTAL PLACEMENT — Front hemisphere only (-90° to +90°)
+					// This keeps items in front of the player, not behind them
+					const randomAngle = Math.random() * Math.PI - Math.PI / 2;
+					x = radius * Math.cos(randomAngle);
+					z = radius * Math.sin(randomAngle);
 
-				if (r < 0.7) {
-					// 70% far range
-					minRadius = 50;
-					maxRadius = 90;
-				} else {
-					// 30% medium range
-					minRadius = 40;
-					maxRadius = 80;
-				}
-
-				const radius = minRadius + Math.random() * (maxRadius - minRadius);
-
-				// Horizontal placement
-				const randomAngle = Math.random() * Math.PI * 2;
-				x = radius * Math.cos(randomAngle);
-				z = radius * Math.sin(randomAngle);
-
-				// TILT-MAPPED VERTICAL Y placement (20 → 40)
-				const betaNorm = (calibratedBeta - 40) / (110 - 40);
-				y = 20 + betaNorm * 20; // always between 20 and 40 meters
+					// HEIGHT — Eye level to slightly above (0.8-2.2 meters)
+					// Randomize height for variety, keeping items visible and reachable
+					y = 0.8 + Math.random() * 2; // 0.8-2.2 meters
 				}
 
 				model.position.set(x, y, z);
@@ -360,14 +341,15 @@ export default function ClientARScreen() {
 				scene.add(model);
 				itemMeshesRef.current.set(item.id, model);
 
-				console.log(`[ARScreen] Spawned ${item.type} at (${x.toFixed(1)}, ${y.toFixed(1)}, ${z.toFixed(1)})`);
+				console.log(
+					`[ARScreen] Spawned ${item.type} at (${x.toFixed(1)}, ${y.toFixed(1)}, ${z.toFixed(1)})`,
+				);
 			},
 			undefined,
 			(error) => {
 				console.error("[ARScreen] Error loading model:", error);
-			}
+			},
 		);
-
 	}, [items, calibratedHeading, calibratedBeta]);
 
 	// Handle tapping on items using raycasting
@@ -376,7 +358,7 @@ export default function ClientARScreen() {
 
 		// Get tap coordinates
 		let clientX: number, clientY: number;
-		if ('touches' in event) {
+		if ("touches" in event) {
 			// Touch event
 			if (event.touches.length === 0) return;
 			clientX = event.touches[0].clientX;
@@ -439,7 +421,10 @@ export default function ClientARScreen() {
 					const duration = 300;
 
 					// Store original materials to restore later
-					const originalMaterials = new Map<THREE.Mesh, THREE.Material | THREE.Material[]>();
+					const originalMaterials = new Map<
+						THREE.Mesh,
+						THREE.Material | THREE.Material[]
+					>();
 					mesh.traverse((child) => {
 						if (child instanceof THREE.Mesh) {
 							originalMaterials.set(child, child.material);
@@ -458,7 +443,7 @@ export default function ClientARScreen() {
 							mesh.position.set(
 								originalPosition.x + shake,
 								originalPosition.y + shake,
-								originalPosition.z + shake
+								originalPosition.z + shake,
 							);
 
 							// Pulse scale
@@ -466,12 +451,15 @@ export default function ClientARScreen() {
 							mesh.scale.set(
 								originalScale.x * scaleFactor,
 								originalScale.y * scaleFactor,
-								originalScale.z * scaleFactor
+								originalScale.z * scaleFactor,
 							);
 						} else {
 							// Second half: restore materials
 							mesh.traverse((child) => {
-								if (child instanceof THREE.Mesh && originalMaterials.has(child)) {
+								if (
+									child instanceof THREE.Mesh &&
+									originalMaterials.has(child)
+								) {
 									child.material = originalMaterials.get(child)!;
 								}
 							});
@@ -484,7 +472,10 @@ export default function ClientARScreen() {
 							mesh.position.copy(originalPosition);
 							mesh.scale.copy(originalScale);
 							mesh.traverse((child) => {
-								if (child instanceof THREE.Mesh && originalMaterials.has(child)) {
+								if (
+									child instanceof THREE.Mesh &&
+									originalMaterials.has(child)
+								) {
 									child.material = originalMaterials.get(child)!;
 								}
 							});
@@ -518,8 +509,12 @@ export default function ClientARScreen() {
 		// Check if phone is held upright (beta between 40-110 degrees)
 		const currentBeta = orientation.beta;
 		if (currentBeta < 40 || currentBeta > 110) {
-			setDebugInfo(`Please hold phone upright! Beta: ${currentBeta.toFixed(0)}° (need 40-110°)`);
-			console.warn(`[ARScreen] Cannot calibrate - phone not upright. Beta: ${currentBeta.toFixed(0)}°`);
+			setDebugInfo(
+				`Please hold phone upright! Beta: ${currentBeta.toFixed(0)}° (need 40-110°)`,
+			);
+			console.warn(
+				`[ARScreen] Cannot calibrate - phone not upright. Beta: ${currentBeta.toFixed(0)}°`,
+			);
 			return;
 		}
 
@@ -530,7 +525,9 @@ export default function ClientARScreen() {
 		setCalibratedBeta(currentBeta); // Save phone tilt angle during calibration
 		setShowCalibrationPrompt(false);
 
-		console.log(`[ARScreen] Calibrated! Stage: ${currentHeading.toFixed(0)}°, Beta (tilt): ${currentBeta.toFixed(0)}°`);
+		console.log(
+			`[ARScreen] Calibrated! Stage: ${currentHeading.toFixed(0)}°, Beta (tilt): ${currentBeta.toFixed(0)}°`,
+		);
 		setDebugInfo(`Calibrated to ${currentHeading.toFixed(0)}°`);
 
 		// Anchor the player
@@ -576,31 +573,30 @@ export default function ClientARScreen() {
 					left: "10px",
 					zIndex: 99999,
 					maxHeight: "40vh",
-					overflowY: "auto"
+					overflowY: "auto",
 				}}
 			>
-
 				<p>Calibrated: {calibratedHeading !== null ? "✅" : "❌"}</p>
 				<p className="mt-1">Phase: {phase}</p>
 				<p>Items: {items.length}</p>
 
-								<p className="mt-2 font-semibold text-yellow-300">Tilt Debug:</p>
+				<p className="mt-2 font-semibold text-yellow-300">Tilt Debug:</p>
+				<p className="text-xs">Live Beta: {orientation.beta.toFixed(1)}°</p>
 				<p className="text-xs">
-					Live Beta: {orientation.beta.toFixed(1)}°  
+					Calibrated Beta:{" "}
+					{calibratedBeta !== null ? calibratedBeta.toFixed(1) : "—"}°
 				</p>
 				<p className="text-xs">
-					Calibrated Beta: {calibratedBeta !== null ? calibratedBeta.toFixed(1) : "—"}°  
-				</p>
-				<p className="text-xs">
-					Beta Norm: {
-						calibratedBeta !== null 
-							? ((calibratedBeta - 40) / (110 - 40)).toFixed(2) 
-							: "—"
-					}
+					Beta Norm:{" "}
+					{calibratedBeta !== null
+						? ((calibratedBeta - 40) / (110 - 40)).toFixed(2)
+						: "—"}
 				</p>
 
 				<p className="mt-1 font-semibold">Orientation:</p>
-				<p className="text-xs">Alpha (compass): {orientation.alpha.toFixed(0)}°</p>
+				<p className="text-xs">
+					Alpha (compass): {orientation.alpha.toFixed(0)}°
+				</p>
 				<p className="text-xs">Beta (tilt): {orientation.beta.toFixed(0)}°</p>
 				<p className="text-xs">Gamma (roll): {orientation.gamma.toFixed(0)}°</p>
 
@@ -619,11 +615,11 @@ export default function ClientARScreen() {
 						<p className="mt-1 font-semibold">Spawned Items:</p>
 						{Array.from(itemMeshesRef.current.entries()).map(([id, mesh]) => {
 							const pos = mesh.position;
-							const itemData = items.find(i => i.id === id);
+							const itemData = items.find((i) => i.id === id);
 							return (
 								<p key={id} className="text-xs">
-									{itemData?.type === "boss" ? "🔥BOSS" : "📦"}:
-									X={pos.x.toFixed(0)} Y={pos.y.toFixed(0)} Z={pos.z.toFixed(0)}
+									{itemData?.type === "boss" ? "🔥BOSS" : "📦"}: X=
+									{pos.x.toFixed(0)} Y={pos.y.toFixed(0)} Z={pos.z.toFixed(0)}
 								</p>
 							);
 						})}
@@ -639,7 +635,7 @@ export default function ClientARScreen() {
 						top: "50%",
 						left: "50%",
 						transform: "translate(-50%, -50%)",
-						zIndex: 30
+						zIndex: 30,
 					}}
 				>
 					<div className="w-8 h-8 border-2 border-white rounded-full opacity-70" />
@@ -656,7 +652,7 @@ export default function ClientARScreen() {
 					left: 0,
 					width: "100vw",
 					height: "100vh",
-					zIndex: 9999
+					zIndex: 9999,
 				}}
 			>
 				{!cameraReady && (
@@ -667,24 +663,31 @@ export default function ClientARScreen() {
 					</div>
 				)}
 
-				{cameraReady && !gyroReady && typeof (DeviceOrientationEvent as any).requestPermission === 'function' && (
-					<div className="bg-black/70 text-white px-8 py-6 rounded-xl text-center max-w-md pointer-events-auto">
-						<h2 className="text-3xl font-bold mb-3">Enable Motion Sensors</h2>
-						<p className="text-xl mb-6">Tap to allow gyroscope access</p>
-						<button
-							className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-8 rounded-lg text-xl"
-							onClick={() => (window as any).requestGyroPermission()}
-						>
-							Enable Gyroscope
-						</button>
-					</div>
-				)}
+				{cameraReady &&
+					!gyroReady &&
+					typeof (DeviceOrientationEvent as any).requestPermission ===
+						"function" && (
+						<div className="bg-black/70 text-white px-8 py-6 rounded-xl text-center max-w-md pointer-events-auto">
+							<h2 className="text-3xl font-bold mb-3">Enable Motion Sensors</h2>
+							<p className="text-xl mb-6">Tap to allow gyroscope access</p>
+							<button
+								className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-8 rounded-lg text-xl"
+								onClick={() => (window as any).requestGyroPermission()}
+							>
+								Enable Gyroscope
+							</button>
+						</div>
+					)}
 
-				{showCalibrationPrompt && (
+				{!isAnchored && showCalibrationPrompt && (
 					<div className="bg-black/80 text-white px-8 py-6 rounded-xl text-center max-w-md pointer-events-auto">
 						<h2 className="text-3xl font-bold mb-3">📍 Calibrate Direction</h2>
-						<p className="text-xl mb-4">Point your phone at the entertainer screen</p>
-						<p className="text-base mb-6 opacity-80">This helps position items correctly</p>
+						<p className="text-xl mb-4">
+							Point your phone at the entertainer screen
+						</p>
+						<p className="text-base mb-6 opacity-80">
+							This helps position items correctly
+						</p>
 						<button
 							className="bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-8 rounded-lg text-xl"
 							onClick={handleCalibrate}
@@ -710,9 +713,11 @@ export default function ClientARScreen() {
 
 				{phase === "hunting" && items.length > 0 && (
 					<div className="bg-black/70 text-white px-6 py-4 rounded-xl text-center">
-						{items.some(item => item.type === "boss") ? (
+						{items.some((item) => item.type === "boss") ? (
 							<>
-								<p className="text-2xl font-bold text-red-400">🔥 BOSS APPEARED!</p>
+								<p className="text-2xl font-bold text-red-400">
+									🔥 BOSS APPEARED!
+								</p>
 								<p className="text-lg mt-2">Point toward entertainer screen!</p>
 								<p className="text-sm mt-1">Everyone must attack together!</p>
 							</>
