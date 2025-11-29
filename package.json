@@ -19,7 +19,7 @@
         "tailwindcss": "^4.1.17",
         "three": "^0.160.1",
         "zustand": "^5.0.8",
-        "@mikiwikipolvoron/wilco": "link:@mikiwikipolvoron/wilco"
+        "@mikiwikipolvoron/wilco": "^1.0.0"
     },
     "devDependencies": {
         "@biomejs/biome": "2.2.4",
