@@ -1,43 +1,43 @@
 {
-  "name": "client",
-  "private": true,
-  "version": "0.0.0",
-  "type": "module",
-  "scripts": {
-    "dev": "vite --host 0.0.0.0",
-    "build": "tsc -b && vite build",
-    "lint": "eslint .",
-    "preview": "vite preview"
-  },
-  "dependencies": {
-    "@ar-js-org/ar.js": "^3.4.7",
-    "@tailwindcss/vite": "^4.1.17",
-    "howler": "^2.2.4",
-    "react": "^19.2.0",
-    "react-dom": "^19.2.0",
-    "socket.io-client": "^4.8.1",
-    "tailwindcss": "^4.1.17",
-    "three": "^0.160.1",
-    "zustand": "^5.0.8",
-    "@wilco/shared": "link:@wilco/shared"
-  },
-  "devDependencies": {
-    "@biomejs/biome": "2.2.4",
-    "@eslint/js": "^9.39.1",
-    "@types/node": "^24.10.1",
-    "@types/react": "^19.2.7",
-    "@types/react-dom": "^19.2.3",
-    "@types/three": "^0.160.0",
-    "@vitejs/plugin-react": "^5.1.1",
-    "eslint": "^9.39.1",
-    "eslint-plugin-react-hooks": "^7.0.1",
-    "eslint-plugin-react-refresh": "^0.4.24",
-    "globals": "^16.5.0",
-    "typescript": "~5.9.3",
-    "typescript-eslint": "^8.48.0",
-    "vite": "npm:rolldown-vite@7.2.5"
-  },
-  "overrides": {
-    "vite": "npm:rolldown-vite@7.2.5"
-  }
+    "name": "client",
+    "private": true,
+    "version": "0.0.0",
+    "type": "module",
+    "scripts": {
+        "dev": "vite --host 0.0.0.0",
+        "build": "tsc -b && vite build",
+        "lint": "eslint .",
+        "preview": "vite preview"
+    },
+    "dependencies": {
+        "@ar-js-org/ar.js": "^3.4.7",
+        "@tailwindcss/vite": "^4.1.17",
+        "howler": "^2.2.4",
+        "react": "^19.2.0",
+        "react-dom": "^19.2.0",
+        "socket.io-client": "^4.8.1",
+        "tailwindcss": "^4.1.17",
+        "three": "^0.160.1",
+        "zustand": "^5.0.8",
+        "@mikiwikipolvoron/wilco": "link:@mikiwikipolvoron/wilco"
+    },
+    "devDependencies": {
+        "@biomejs/biome": "2.2.4",
+        "@eslint/js": "^9.39.1",
+        "@types/node": "^24.10.1",
+        "@types/react": "^19.2.7",
+        "@types/react-dom": "^19.2.3",
+        "@types/three": "^0.160.0",
+        "@vitejs/plugin-react": "^5.1.1",
+        "eslint": "^9.39.1",
+        "eslint-plugin-react-hooks": "^7.0.1",
+        "eslint-plugin-react-refresh": "^0.4.24",
+        "globals": "^16.5.0",
+        "typescript": "~5.9.3",
+        "typescript-eslint": "^8.48.0",
+        "vite": "npm:rolldown-vite@7.2.5"
+    },
+    "overrides": {
+        "vite": "npm:rolldown-vite@7.2.5"
+    }
 }
