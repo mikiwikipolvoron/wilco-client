@@ -1,0 +1,11 @@
+Model Information:
+* title:	Phalaenopsis Orchid
+* source:	https://sketchfab.com/3d-models/phalaenopsis-orchid-4eb7962d6b9e42599834eb80363ac567
+* author:	jamespage01 (https://sketchfab.com/jamespage01)
+
+Model License:
+* license type:	CC-BY-4.0 (http://creativecommons.org/licenses/by/4.0/)
+* requirements:	Author must be credited. Commercial use is allowed.
+
+If you use this 3D model in your project be sure to copy paste this credit wherever you share it:
+This work is based on "Phalaenopsis Orchid" (https://sketchfab.com/3d-models/phalaenopsis-orchid-4eb7962d6b9e42599834eb80363ac567) by jamespage01 (https://sketchfab.com/jamespage01) licensed under CC-BY-4.0 (http://creativecommons.org/licenses/by/4.0/)

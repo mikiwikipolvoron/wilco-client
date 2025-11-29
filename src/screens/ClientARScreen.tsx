@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import * as THREE from "three";
 import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
+import { Howl } from "howler";
 import { useARSync } from "../lib/hooks/useARSync";
 import { useARStore } from "../lib/stores/useARStore";
 import { useSocketStore } from "../lib/stores/useSocketStore";
@@ -23,6 +24,11 @@ export default function ClientARScreen() {
 	);
 	const [calibratedBeta, setCalibratedBeta] = useState<number | null>(null); // Surface level (tilt)
 	const [showCalibrationPrompt, setShowCalibrationPrompt] = useState(false);
+	const [playerTapCount, setPlayerTapCount] = useState(0); // Track player's personal tap count
+
+	// Sound effects
+	const itemTapSoundRef = useRef<Howl | null>(null);
+	const bossTapSoundRef = useRef<Howl | null>(null);
 
 	// Three.js refs
 	const sceneRef = useRef<THREE.Scene | null>(null);
@@ -33,26 +39,109 @@ export default function ClientARScreen() {
 	// Sync with server
 	useARSync();
 
-	// Animate item removal (poof effect)
+	// Initialize sound effects
+	useEffect(() => {
+		// Load item tap sound (use a pop/collect sound)
+		itemTapSoundRef.current = new Howl({
+			src: ["/sounds/beam_sound-103367.mp3"],
+			volume: 0.8,
+			preload: true,
+		});
+
+		// Load boss tap sound (use a hit/damage sound)
+		bossTapSoundRef.current = new Howl({
+			src: ["/sounds/damage.mp3"],
+			volume: 0.6,
+			preload: true,
+		});
+
+		return () => {
+			itemTapSoundRef.current?.unload();
+			bossTapSoundRef.current?.unload();
+		};
+	}, []);
+
+	// Animate item removal with explosion effect
 	const animateItemRemoval = (mesh: THREE.Object3D, onComplete: () => void) => {
 		const startScale = mesh.scale.clone();
+		const startPosition = mesh.position.clone();
 		const startTime = Date.now();
-		const duration = 300; // 300ms animation
+		const duration = 400; // 400ms animation
+
+		// Create particle explosion effect
+		const particleCount = 8;
+		const particles: THREE.Mesh[] = [];
+		const particleVelocities: THREE.Vector3[] = [];
+
+		if (sceneRef.current) {
+			for (let i = 0; i < particleCount; i++) {
+				const geometry = new THREE.SphereGeometry(0.3, 8, 8);
+				const material = new THREE.MeshBasicMaterial({
+					color: 0xffaa00,
+					transparent: true,
+					opacity: 1,
+				});
+				const particle = new THREE.Mesh(geometry, material);
+				particle.position.copy(startPosition);
+
+				// Random velocity in all directions
+				const angle = (i / particleCount) * Math.PI * 2;
+				const speed = 3 + Math.random() * 2;
+				particleVelocities.push(
+					new THREE.Vector3(
+						Math.cos(angle) * speed,
+						Math.random() * speed * 0.5,
+						Math.sin(angle) * speed,
+					),
+				);
+
+				sceneRef.current.add(particle);
+				particles.push(particle);
+			}
+		}
 
 		const animate = () => {
 			const elapsed = Date.now() - startTime;
 			const progress = Math.min(elapsed / duration, 1);
 
-			// Scale down and fade out
-			const scale = startScale.x * (1 - progress);
-			mesh.scale.set(scale, scale, scale);
+			// Main item: expand then shrink with rotation
+			if (progress < 0.3) {
+				// First 30%: quick expand
+				const expandScale = 1 + progress * 3;
+				mesh.scale.set(
+					startScale.x * expandScale,
+					startScale.y * expandScale,
+					startScale.z * expandScale,
+				);
+			} else {
+				// Then shrink rapidly
+				const shrinkProgress = (progress - 0.3) / 0.7;
+				const scale = startScale.x * (1 - shrinkProgress);
+				mesh.scale.set(scale, scale, scale);
+			}
 
-			// Rotate while disappearing
-			mesh.rotation.y += 0.2;
+			// Fast rotation
+			mesh.rotation.y += 0.3;
+			mesh.rotation.x += 0.2;
+
+			// Animate particles
+			particles.forEach((particle, i) => {
+				const velocity = particleVelocities[i];
+				particle.position.add(
+					velocity.clone().multiplyScalar(0.016 * (1 - progress)),
+				);
+				(particle.material as THREE.MeshBasicMaterial).opacity = 1 - progress;
+			});
 
 			if (progress < 1) {
 				requestAnimationFrame(animate);
 			} else {
+				// Cleanup particles
+				particles.forEach((particle) => {
+					sceneRef.current?.remove(particle);
+					particle.geometry.dispose();
+					(particle.material as THREE.Material).dispose();
+				});
 				onComplete();
 			}
 		};
@@ -283,47 +372,75 @@ export default function ClientARScreen() {
 		const item = newItem;
 
 		loader.load(
-			"/models/snickers/scene.gltf",
+			"/models/orchid/scene.gltf",
 			(gltf) => {
 				const model = gltf.scene;
 
 				let x: number, y: number, z: number;
 
 				if (item.type === "boss") {
-					// Boss: ALWAYS at chest height, toward calibrated stage direction
-					const distance = 12; // 12 meters toward stage (visible but imposing)
+					// Boss: Spawn at EXACT calibrated angle and height
+					// Use shorter distance for beta 85-90° (very steep angle)
+					const bossDistance = 5; // Much closer to keep Y reasonable
 
-					// Convert compass heading to Three.js coordinates
-					const angleInThreeJS =
-						-THREE.MathUtils.degToRad(calibratedHeading) + Math.PI / 2;
+					// CRITICAL: The camera rotation uses alphaRad directly for Y-axis rotation
+					// So the boss position must be calculated with the calibrated alpha as-is
+					// When camera.rotation.y = calibratedAlpha (in radians), boss should be straight ahead (on -Z axis)
+					const calibratedAlphaRad = THREE.MathUtils.degToRad(calibratedHeading);
 
-					x = Math.cos(angleInThreeJS) * distance;
-					y = 1.5; // Chest/head height for boss (1.5 meters)
-					z = Math.sin(angleInThreeJS) * distance;
+					// Position boss in world space so it's straight ahead when camera is at calibrated angle
+					// At calibrated angle, we want boss at (0, y, -distance) in camera view
+					// This means in world space: rotate (0, 0, -distance) by calibrated alpha around Y axis
+					x = -Math.sin(calibratedAlphaRad) * bossDistance;
+					z = -Math.cos(calibratedAlphaRad) * bossDistance;
+
+					// Calculate Y based on calibrated beta tilt
+					// Use the same ratio as regular items for consistency: Y/distance ≈ 0.933
+					// This ensures boss appears at similar viewing angle as regular items
+					// At beta ~85-90°, this gives the right height
+					// For beta 90° (perpendicular), y/distance ≈ 0. For beta 87°, y/distance = tan(3°) ≈ 0.052
+				// Boss spawns at calibrated beta (typically 87-90°)
+				// Using formula: beta = atan(y/distance)
+				// For beta 87° at distance 5m: y = 5 * tan(87°) ≈ 95m
+				const calibratedBetaToUse = calibratedBeta ?? 90;
+				y = bossDistance * Math.tan(THREE.MathUtils.degToRad(calibratedBetaToUse));
 
 					console.log(
-						`[ARScreen] Boss positioned at Y=${y}, compass ${calibratedHeading.toFixed(0)}° at (${x.toFixed(1)}, ${y.toFixed(1)}, ${z.toFixed(1)})`,
+						`[ARScreen] Boss spawned at EXACT calibration: Compass=${calibratedHeading.toFixed(0)}° (${calibratedAlphaRad.toFixed(2)} rad), Beta=${(calibratedBeta ?? 90).toFixed(0)}° → Position (${x.toFixed(1)}, ${y.toFixed(1)}, ${z.toFixed(1)})`,
 					);
 				} else {
-					// Regular items: spawn in visible range around player
-					// DISTANCE — 15-25 meters from player (visible but not too close)
-					const radius = 15 + Math.random() * 20; // 15-25 meters
+					// Regular items: spawn based on perfect ratio (X=7, Y=28, Z=30)
+					// Distance = sqrt(7² + 30²) ≈ 30.8m, Height = 28m
+					// This ratio gives optimal viewing angle (beta ~85°)
 
-					// HORIZONTAL PLACEMENT — Front hemisphere only (-90° to +90°)
-					// This keeps items in front of the player, not behind them
-					const randomAngle = Math.random() * Math.PI - Math.PI / 2;
-					x = radius * Math.cos(randomAngle);
-					z = radius * Math.sin(randomAngle);
+					// Use consistent distance matching the perfect example
+					// Random position within working ranges: X(2-5), Y(25-50), Z(1-2)
+					x = 2 + Math.random() * 3; // X: 2-5
+					z = 1 + Math.random() * 1; // Z: 1-2
+					y = 25 + Math.random() * 25; // Y: 25-50
 
-					// HEIGHT — Eye level to slightly above (0.8-2.2 meters)
-					// Randomize height for variety, keeping items visible and reachable
-					y = 0.8 + Math.random() * 2; // 0.8-2.2 meters
+					// Randomize alpha compass angle (360° around user)
+					const randomAlphaOffset = Math.random() * Math.PI * 2; // 0-360°
+
+					// Rotate the X,Z position around Y axis
+					const tempX = x;
+					const tempZ = z;
+					x = tempX * Math.cos(randomAlphaOffset) - tempZ * Math.sin(randomAlphaOffset);
+					z = tempX * Math.sin(randomAlphaOffset) + tempZ * Math.cos(randomAlphaOffset);
+
+					// Calculate horizontal distance and expected beta
+					const horizontalDist = Math.sqrt(x * x + z * z);
+					const calculatedBeta = THREE.MathUtils.radToDeg(Math.atan(y / horizontalDist));
+
+					console.log(
+						`[ARScreen] Item spawn: X=${x.toFixed(1)}, Y=${y.toFixed(1)}, Z=${z.toFixed(1)} | Horizontal=${horizontalDist.toFixed(1)}m | EXPECTED BETA=${calculatedBeta.toFixed(0)}° | Alpha offset=${THREE.MathUtils.radToDeg(randomAlphaOffset).toFixed(0)}°`,
+					);
 				}
 
 				model.position.set(x, y, z);
 
-				// Scale model - Boss: 0.5x, Regular: 0.3x
-				const scale = item.type === "boss" ? 2.0 : 1.2;
+				// Scale model - Boss: larger, Regular: larger
+				const scale = item.type === "boss" ? 4.0 : 3.0;
 				model.scale.set(scale, scale, scale);
 
 				// Rotate to face player
@@ -353,30 +470,13 @@ export default function ClientARScreen() {
 	}, [items, calibratedHeading, calibratedBeta]);
 
 	// Handle tapping on items using raycasting
-	const handleScreenTap = (event: React.MouseEvent | React.TouchEvent) => {
+	const handleScreenTap = () => {
 		if (!cameraRef.current || !sceneRef.current || items.length === 0) return;
 
-		// Get tap coordinates
-		let clientX: number, clientY: number;
-		if ("touches" in event) {
-			// Touch event
-			if (event.touches.length === 0) return;
-			clientX = event.touches[0].clientX;
-			clientY = event.touches[0].clientY;
-		} else {
-			// Mouse event
-			clientX = event.clientX;
-			clientY = event.clientY;
-		}
-
-		// Convert to normalized device coordinates (-1 to +1)
-		const mouse = new THREE.Vector2();
-		mouse.x = (clientX / window.innerWidth) * 2 - 1;
-		mouse.y = -(clientY / window.innerHeight) * 2 + 1;
-
-		// Create raycaster
+		// Create raycaster from center of screen (the aim square)
 		const raycaster = new THREE.Raycaster();
-		raycaster.setFromCamera(mouse, cameraRef.current);
+		const centerMouse = new THREE.Vector2(0, 0); // Center of screen
+		raycaster.setFromCamera(centerMouse, cameraRef.current);
 
 		// Get all meshes from items
 		const meshes: THREE.Object3D[] = [];
@@ -384,7 +484,7 @@ export default function ClientARScreen() {
 			meshes.push(mesh);
 		});
 
-		// Check for intersections
+		// Check for intersections at center (aim square)
 		const intersects = raycaster.intersectObjects(meshes, true);
 
 		if (intersects.length > 0) {
@@ -401,7 +501,7 @@ export default function ClientARScreen() {
 			}
 
 			if (itemId) {
-				console.log("[ARScreen] Tapped item:", itemId);
+				console.log("[ARScreen] Item centered in aim square:", itemId);
 
 				const mesh = itemMeshesRef.current.get(itemId);
 				if (!mesh) return;
@@ -410,10 +510,18 @@ export default function ClientARScreen() {
 
 				// Only animate removal for regular items, not boss
 				if (itemType !== "boss") {
+					// Play item tap sound
+					itemTapSoundRef.current?.play();
+
+					// Increment player tap count
+					setPlayerTapCount((prev) => Math.min(prev + 1, 10));
+
 					animateItemRemoval(mesh, () => {
 						// Animation complete - item will be removed when server updates
 					});
 				} else {
+					// Play boss hit sound
+					bossTapSoundRef.current?.play();
 					// Boss: Play damage animation (red flash + shake)
 					const originalScale = mesh.scale.clone();
 					const originalPosition = mesh.position.clone();
@@ -530,10 +638,14 @@ export default function ClientARScreen() {
 		);
 		setDebugInfo(`Calibrated to ${currentHeading.toFixed(0)}°`);
 
-		// Anchor the player
+		// Anchor the player and send calibration data to server
 		if (socket) {
 			useARStore.getState().setAnchored(true);
-			socket.emit("client_event", { type: "anchor_success" });
+			socket.emit("client_event", {
+				type: "anchor_success",
+				alpha: currentHeading,
+				beta: currentBeta
+			});
 		}
 	};
 
@@ -564,70 +676,22 @@ export default function ClientARScreen() {
 				onTouchStart={handleScreenTap}
 			/>
 
-			{/* Debug overlay */}
-			<div
-				className="bg-black/80 text-white text-xs p-2 rounded max-w-xs pointer-events-none"
-				style={{
-					position: "fixed",
-					top: "10px",
-					left: "10px",
-					zIndex: 99999,
-					maxHeight: "40vh",
-					overflowY: "auto",
-				}}
-			>
-				<p>Calibrated: {calibratedHeading !== null ? "✅" : "❌"}</p>
-				<p className="mt-1">Phase: {phase}</p>
-				<p>Items: {items.length}</p>
 
-				<p className="mt-2 font-semibold text-yellow-300">Tilt Debug:</p>
-				<p className="text-xs">Live Beta: {orientation.beta.toFixed(1)}°</p>
-				<p className="text-xs">
-					Calibrated Beta:{" "}
-					{calibratedBeta !== null ? calibratedBeta.toFixed(1) : "—"}°
-				</p>
-				<p className="text-xs">
-					Beta Norm:{" "}
-					{calibratedBeta !== null
-						? ((calibratedBeta - 40) / (110 - 40)).toFixed(2)
-						: "—"}
-				</p>
+			{/* Item Counter - Top of screen */}
+			{gyroReady && phase === "hunting" && !items.some((item) => item.type === "boss") && (
+				<div
+					className="absolute top-6 left-1/2 transform -translate-x-1/2 pointer-events-none"
+					style={{ zIndex: 30 }}
+				>
+					<div className="bg-black/70 backdrop-blur-sm px-6 py-3 rounded-full border-2 border-white/50">
+						<p className="text-white text-2xl font-bold">
+							{playerTapCount}/10
+						</p>
+					</div>
+				</div>
+			)}
 
-				<p className="mt-1 font-semibold">Orientation:</p>
-				<p className="text-xs">
-					Alpha (compass): {orientation.alpha.toFixed(0)}°
-				</p>
-				<p className="text-xs">Beta (tilt): {orientation.beta.toFixed(0)}°</p>
-				<p className="text-xs">Gamma (roll): {orientation.gamma.toFixed(0)}°</p>
-
-				{calibratedHeading !== null && (
-					<>
-						<p className="mt-1 font-semibold">Calibration:</p>
-						<p className="text-xs">Stage: {calibratedHeading.toFixed(0)}°</p>
-						{calibratedBeta !== null && (
-							<p className="text-xs">Level: {calibratedBeta.toFixed(0)}°</p>
-						)}
-					</>
-				)}
-
-				{items.length > 0 && (
-					<>
-						<p className="mt-1 font-semibold">Spawned Items:</p>
-						{Array.from(itemMeshesRef.current.entries()).map(([id, mesh]) => {
-							const pos = mesh.position;
-							const itemData = items.find((i) => i.id === id);
-							return (
-								<p key={id} className="text-xs">
-									{itemData?.type === "boss" ? "🔥BOSS" : "📦"}: X=
-									{pos.x.toFixed(0)} Y={pos.y.toFixed(0)} Z={pos.z.toFixed(0)}
-								</p>
-							);
-						})}
-					</>
-				)}
-			</div>
-
-			{/* Crosshair for aiming */}
+			{/* Aim Square - Center targeting reticle */}
 			{gyroReady && phase === "hunting" && (
 				<div
 					className="absolute pointer-events-none"
@@ -638,8 +702,22 @@ export default function ClientARScreen() {
 						zIndex: 30,
 					}}
 				>
-					<div className="w-8 h-8 border-2 border-white rounded-full opacity-70" />
-					<div className="absolute top-1/2 left-1/2 w-1 h-1 bg-white rounded-full transform -translate-x-1/2 -translate-y-1/2" />
+					{/* Aim square box */}
+					<div className="relative w-32 h-32 border-4 border-white/80 rounded-lg">
+						{/* Corner accents */}
+						<div className="absolute -top-1 -left-1 w-6 h-6 border-t-4 border-l-4 border-yellow-400" />
+						<div className="absolute -top-1 -right-1 w-6 h-6 border-t-4 border-r-4 border-yellow-400" />
+						<div className="absolute -bottom-1 -left-1 w-6 h-6 border-b-4 border-l-4 border-yellow-400" />
+						<div className="absolute -bottom-1 -right-1 w-6 h-6 border-b-4 border-r-4 border-yellow-400" />
+
+						{/* Center dot */}
+						<div className="absolute top-1/2 left-1/2 w-2 h-2 bg-red-500 rounded-full transform -translate-x-1/2 -translate-y-1/2" />
+					</div>
+
+					{/* Instruction text below aim square */}
+					<p className="text-white text-sm font-semibold text-center mt-4 drop-shadow-lg">
+						Center item to tap
+					</p>
 				</div>
 			)}
 
