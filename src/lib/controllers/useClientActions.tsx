@@ -1,6 +1,6 @@
 // hooks/useClientActions.ts - CLIENT ONLY
 
-import type { ClientGlobalEvent, ClientServiceEvent } from "@mikiwikipolvoron/wilco/events";
+import type { ClientGlobalEvent, ClientServiceEvent } from "@mikiwikipolvoron/wilco-lib/events";
 import { useSocketStore } from "../stores/useSocketStore";
 
 export function useClientActions() {

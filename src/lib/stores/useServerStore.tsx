@@ -3,7 +3,7 @@ import type {
     GroupDefinitions,
     Player,
     ServerState,
-} from "@mikiwikipolvoron/wilco/data";
+} from "@mikiwikipolvoron/wilco-lib/data";
 import { create } from "zustand";
 
 interface ServerStore extends ServerState {

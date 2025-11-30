@@ -1,5 +1,5 @@
-import type { FloatingEmoji } from "@mikiwikipolvoron/wilco/display";
-import type { ServerEvent } from "@mikiwikipolvoron/wilco/events";
+import type { FloatingEmoji } from "@mikiwikipolvoron/wilco-lib/display";
+import type { ServerEvent } from "@mikiwikipolvoron/wilco-lib/events";
 import { useEffect } from "react";
 import { useLobbyStore } from "../stores/useLobbyStore";
 import { useSocketStore } from "../stores/useSocketStore";

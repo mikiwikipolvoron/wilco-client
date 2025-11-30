@@ -1,7 +1,7 @@
 import { useEffect } from "react";
 import { useSocketStore } from "../stores/useSocketStore";
 import { useARStore } from "../stores/useARStore";
-import type { ServerEvent } from "@mikiwikipolvoron/wilco/events";
+import type { ServerEvent } from "@mikiwikipolvoron/wilco-lib/events";
 
 export function useARSync() {
 	const socket = useSocketStore((state) => state.socket);

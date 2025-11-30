@@ -1,4 +1,4 @@
-import { SERVER_BEATS_EVENTS, type ServerEvent } from "@mikiwikipolvoron/wilco/events";
+import { SERVER_BEATS_EVENTS, type ServerEvent } from "@mikiwikipolvoron/wilco-lib/events";
 import { useEffect } from "react";
 import { useBeatsStore } from "../stores/useBeatsStore";
 import { useSocketStore } from "../stores/useSocketStore";

@@ -1,4 +1,4 @@
-import type { BeatsPhase } from "@mikiwikipolvoron/wilco/data";
+import type { BeatsPhase } from "@mikiwikipolvoron/wilco-lib/data";
 import { create } from "zustand";
 
 interface BeatsStore {

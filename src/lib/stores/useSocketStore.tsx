@@ -1,4 +1,4 @@
-import type { ClientEvent } from "@mikiwikipolvoron/wilco/events";
+import type { ClientEvent } from "@mikiwikipolvoron/wilco-lib/events";
 import { io, type Socket } from "socket.io-client";
 import { create } from "zustand";
 

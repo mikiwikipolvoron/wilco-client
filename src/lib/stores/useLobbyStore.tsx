@@ -1,4 +1,4 @@
-import type { FloatingEmoji } from "@mikiwikipolvoron/wilco/display";
+import type { FloatingEmoji } from "@mikiwikipolvoron/wilco-lib/display";
 import { create } from "zustand";
 
 interface LobbyStore {
