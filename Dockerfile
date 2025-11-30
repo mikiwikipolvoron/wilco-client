@@ -18,22 +18,11 @@ RUN --mount=type=secret,id=github_token,env=GITHUB_TOKEN cd /temp/prod && bun in
 
 # copy node_modules from temp directory
 # then copy all (non-ignored) project files into the image
-FROM base AS prerelease
-COPY --from=install /temp/dev/node_modules node_modules
-COPY . .
-
-# [optional] tests & build
-ENV NODE_ENV=production
-RUN bun run build
-
-# copy production dependencies and source code into final image
 FROM base AS release
-# COPY --from=install /temp/prod/apps/client/node_modules node_modules
 COPY --from=install /temp/prod/node_modules node_modules
-COPY --from=prerelease /usr/src/app/index.ts .
-COPY --from=prerelease /usr/src/app/package.json .
+COPY . .
 
 # run the app
 USER bun
 EXPOSE 5173/tcp
-ENTRYPOINT [ "bun", "run", "index.ts" ]
+ENTRYPOINT [ "bun", "start" ]
