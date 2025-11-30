@@ -40,7 +40,8 @@ jobs:
       - name: Install dependencies
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: bun install --production
+          INTERNAL_PASSWORD: ${{ secrets.INTERNAL_PASSWORD }}
+        run: bun install
       - name: Build
         run: bun run build
       - name: Setup Pages
