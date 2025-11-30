@@ -12,7 +12,7 @@
     },
     "dependencies": {
         "@ar-js-org/ar.js": "^3.4.7",
-        "@mikiwikipolvoron/wilco-lib": "^1.1.0",
+        "@mikiwikipolvoron/wilco-lib": "^1.0.0",
         "@tailwindcss/vite": "^4.1.17",
         "howler": "^2.2.4",
         "react": "^19.2.0",

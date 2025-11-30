@@ -14,7 +14,11 @@ permissions:
   contents: read
   pages: write
   id-token: write
+  packages: read
 
+env:
+  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+  BUN_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 # Allow one concurrent deployment
 concurrency:
   group: 'pages'
@@ -36,8 +40,6 @@ jobs:
         with:
           bun-version: latest
       - name: Install dependencies
-        env:
-          BUN_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: bun install --force
       - name: Build
         run: bun run build
