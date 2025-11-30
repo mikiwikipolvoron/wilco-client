@@ -37,11 +37,9 @@ jobs:
           node-version: lts/*
           cache: 'npm'
       - name: Install dependencies
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: bun install --frozen-lockfile --production
+        run: npm ci
       - name: Build
-        run: bun run build
+        run: npm run build
       - name: Setup Pages
         uses: actions/configure-pages@v5
       - name: Upload artifact
