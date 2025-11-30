@@ -21,7 +21,7 @@ RUN mkdir -p /temp/prod
 # COPY packages ./packages
 # COPY bun.lock .npmrc /temp/dev/
 
-COPY ./apps/client/package.json ./apps/client/.npmrc /temp/dev/
+COPY ./apps/client/package.json ./apps/client/.npmrc /temp/prod/
 RUN --mount=type=secret,id=github_token,env=GITHUB_TOKEN cd /temp/prod && bun install --frozen-lockfile --production
 
 # copy node_modules from temp directory
