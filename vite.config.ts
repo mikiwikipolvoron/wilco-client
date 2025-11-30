@@ -9,7 +9,7 @@ export default defineConfig(({ mode }) => {
             plugins: [react(), tailwindcss()],
             server: {
                 host: true,
-                allowedHosts: "https://mikiwikipolvoron.github.io",
+                allowedHosts: ["https://mikiwikipolvoron.github.io"],
             },
             base: '/wilco-client/'
         }
@@ -18,7 +18,7 @@ export default defineConfig(({ mode }) => {
             plugins: [react(), tailwindcss()],
             server: {
                 host: true,
-                allowedHosts: "*"
+                allowedHosts: true
             },
             base: '/'
         }
