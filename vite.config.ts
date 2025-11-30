@@ -4,14 +4,23 @@ import tailwindcss from '@tailwindcss/vite'
 
 
 export default defineConfig(({ mode }) => {
-    if (mode === "production") {
+    if (mode =="production") {
         return {
             plugins: [react(), tailwindcss()],
             server: {
                 host: true,
-                // allowedHosts: "client.rachee.dev",
-            }
-
+                allowedHosts: "https://mikiwikipolvoron.github.io",
+            },
+            base: '/wilco-client/'
+        }
+    } else {
+        return {
+            plugins: [react(), tailwindcss()],
+            server: {
+                host: true,
+                allowedHosts: "*"
+            },
+            base: '/'
         }
     }
 })
