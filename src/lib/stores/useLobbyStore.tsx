@@ -15,7 +15,7 @@ const initialState = {
 	emojis: [],
 };
 
-export const useLobbyStore = create<LobbyStore>((set, get) => ({
+export const useLobbyStore = create<LobbyStore>((set) => ({
 	...initialState,
 
 	decreaseSecondsRemaining: () => {

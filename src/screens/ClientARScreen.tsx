@@ -1,7 +1,7 @@
+import { Howl } from "howler";
 import { useEffect, useRef, useState } from "react";
 import * as THREE from "three";
 import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
-import { Howl } from "howler";
 import { useARSync } from "../lib/hooks/useARSync";
 import { useARStore } from "../lib/stores/useARStore";
 import { useSocketStore } from "../lib/stores/useSocketStore";
@@ -13,7 +13,7 @@ export default function ClientARScreen() {
 	const canvasRef = useRef<HTMLCanvasElement>(null);
 	const [cameraReady, setCameraReady] = useState(false);
 	const [gyroReady, setGyroReady] = useState(false);
-	const [debugInfo, setDebugInfo] = useState<string>("Initializing...");
+	const [_debugInfo, setDebugInfo] = useState<string>("Initializing...");
 	const [orientation, setOrientation] = useState({
 		alpha: 0,
 		beta: 0,
@@ -181,8 +181,9 @@ export default function ClientARScreen() {
 
 		return () => {
 			// Cleanup camera
-			if (videoRef.current && videoRef.current.srcObject) {
+			if (videoRef.current?.srcObject) {
 				const stream = videoRef.current.srcObject as MediaStream;
+				// biome-ignore lint/suspicious/useIterableCallbackReturn: howler type issue?
 				stream.getTracks().forEach((track) => track.stop());
 			}
 		};
@@ -195,10 +196,12 @@ export default function ClientARScreen() {
 		const requestGyroPermission = async () => {
 			// iOS 13+ requires permission
 			if (
+				// biome-ignore lint: any
 				typeof (DeviceOrientationEvent as any).requestPermission === "function"
 			) {
 				try {
 					const permission = await (
+                        // biome-ignore lint: any
 						DeviceOrientationEvent as any
 					).requestPermission();
 					if (permission === "granted") {
@@ -386,7 +389,8 @@ export default function ClientARScreen() {
 					// CRITICAL: The camera rotation uses alphaRad directly for Y-axis rotation
 					// So the boss position must be calculated with the calibrated alpha as-is
 					// When camera.rotation.y = calibratedAlpha (in radians), boss should be straight ahead (on -Z axis)
-					const calibratedAlphaRad = THREE.MathUtils.degToRad(calibratedHeading);
+					const calibratedAlphaRad =
+						THREE.MathUtils.degToRad(calibratedHeading);
 
 					// Position boss in world space so it's straight ahead when camera is at calibrated angle
 					// At calibrated angle, we want boss at (0, y, -distance) in camera view
@@ -399,11 +403,13 @@ export default function ClientARScreen() {
 					// This ensures boss appears at similar viewing angle as regular items
 					// At beta ~85-90°, this gives the right height
 					// For beta 90° (perpendicular), y/distance ≈ 0. For beta 87°, y/distance = tan(3°) ≈ 0.052
-				// Boss spawns at calibrated beta (typically 87-90°)
-				// Using formula: beta = atan(y/distance)
-				// For beta 87° at distance 5m: y = 5 * tan(87°) ≈ 95m
-				const calibratedBetaToUse = calibratedBeta ?? 90;
-				y = bossDistance * Math.tan(THREE.MathUtils.degToRad(calibratedBetaToUse));
+					// Boss spawns at calibrated beta (typically 87-90°)
+					// Using formula: beta = atan(y/distance)
+					// For beta 87° at distance 5m: y = 5 * tan(87°) ≈ 95m
+					const calibratedBetaToUse = calibratedBeta ?? 90;
+					y =
+						bossDistance *
+						Math.tan(THREE.MathUtils.degToRad(calibratedBetaToUse));
 
 					console.log(
 						`[ARScreen] Boss spawned at EXACT calibration: Compass=${calibratedHeading.toFixed(0)}° (${calibratedAlphaRad.toFixed(2)} rad), Beta=${(calibratedBeta ?? 90).toFixed(0)}° → Position (${x.toFixed(1)}, ${y.toFixed(1)}, ${z.toFixed(1)})`,
@@ -425,12 +431,18 @@ export default function ClientARScreen() {
 					// Rotate the X,Z position around Y axis
 					const tempX = x;
 					const tempZ = z;
-					x = tempX * Math.cos(randomAlphaOffset) - tempZ * Math.sin(randomAlphaOffset);
-					z = tempX * Math.sin(randomAlphaOffset) + tempZ * Math.cos(randomAlphaOffset);
+					x =
+						tempX * Math.cos(randomAlphaOffset) -
+						tempZ * Math.sin(randomAlphaOffset);
+					z =
+						tempX * Math.sin(randomAlphaOffset) +
+						tempZ * Math.cos(randomAlphaOffset);
 
 					// Calculate horizontal distance and expected beta
 					const horizontalDist = Math.sqrt(x * x + z * z);
-					const calculatedBeta = THREE.MathUtils.radToDeg(Math.atan(y / horizontalDist));
+					const calculatedBeta = THREE.MathUtils.radToDeg(
+						Math.atan(y / horizontalDist),
+					);
 
 					console.log(
 						`[ARScreen] Item spawn: X=${x.toFixed(1)}, Y=${y.toFixed(1)}, Z=${z.toFixed(1)} | Horizontal=${horizontalDist.toFixed(1)}m | EXPECTED BETA=${calculatedBeta.toFixed(0)}° | Alpha offset=${THREE.MathUtils.radToDeg(randomAlphaOffset).toFixed(0)}°`,
@@ -644,7 +656,7 @@ export default function ClientARScreen() {
 			socket.emit("client_event", {
 				type: "anchor_success",
 				alpha: currentHeading,
-				beta: currentBeta
+				beta: currentBeta,
 			});
 		}
 	};
@@ -676,20 +688,21 @@ export default function ClientARScreen() {
 				onTouchStart={handleScreenTap}
 			/>
 
-
 			{/* Item Counter - Top of screen */}
-			{gyroReady && phase === "hunting" && !items.some((item) => item.type === "boss") && (
-				<div
-					className="absolute top-6 left-1/2 transform -translate-x-1/2 pointer-events-none"
-					style={{ zIndex: 30 }}
-				>
-					<div className="bg-black/70 backdrop-blur-sm px-6 py-3 rounded-full border-2 border-white/50">
-						<p className="text-white text-2xl font-bold">
-							{playerTapCount}/10
-						</p>
+			{gyroReady &&
+				phase === "hunting" &&
+				!items.some((item) => item.type === "boss") && (
+					<div
+						className="absolute top-6 left-1/2 transform -translate-x-1/2 pointer-events-none"
+						style={{ zIndex: 30 }}
+					>
+						<div className="bg-black/70 backdrop-blur-sm px-6 py-3 rounded-full border-2 border-white/50">
+							<p className="text-white text-2xl font-bold">
+								{playerTapCount}/10
+							</p>
+						</div>
 					</div>
-				</div>
-			)}
+				)}
 
 			{/* Aim Square - Center targeting reticle */}
 			{gyroReady && phase === "hunting" && (

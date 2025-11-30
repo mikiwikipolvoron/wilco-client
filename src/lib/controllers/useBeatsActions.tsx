@@ -1,4 +1,4 @@
-import type { ClientBeatsEvent, ClientGlobalEvent, ClientServiceEvent } from "@mikiwikipolvoron/wilco/events";
+import type { ClientBeatsEvent } from "@mikiwikipolvoron/wilco/events";
 import { useSocketStore } from "../stores/useSocketStore";
 
 export function useClientActions() {
