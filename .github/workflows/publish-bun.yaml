@@ -35,8 +35,6 @@ jobs:
         uses: oven-sh/setup-bun@v2.0.2
         with:
           bun-version: latest
-          registry-url: "https://npm.pkg.github.com/"
-          scope: "@mikiwikipolvoron"
       - name: Install dependencies
         env:
           BUN_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
