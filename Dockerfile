@@ -8,25 +8,27 @@ FROM base AS install
 RUN mkdir -p /temp/dev
 
 # Copy all workspace artifacts
-COPY apps ./apps
-COPY packages ./packages
-COPY bun.lock .npmrc /temp/dev/
+# COPY ./apps/client .
+# COPY packages ./packages
 
+COPY ./apps/client/package.json ./apps/client/.npmrc /temp/dev/
 RUN --mount=type=secret,id=github_token,env=GITHUB_TOKEN cd /temp/dev && bun install --frozen-lockfile
 
 # install with --production (exclude devDependencies)
 RUN mkdir -p /temp/prod
 
-COPY apps ./apps
-COPY packages ./packages
-COPY bun.lock .npmrc /temp/dev/
+# COPY apps ./apps
+# COPY packages ./packages
+# COPY bun.lock .npmrc /temp/dev/
 
+COPY ./apps/client/package.json ./apps/client/.npmrc /temp/dev/
 RUN --mount=type=secret,id=github_token,env=GITHUB_TOKEN cd /temp/prod && bun install --frozen-lockfile --production
 
 # copy node_modules from temp directory
 # then copy all (non-ignored) project files into the image
 FROM base AS prerelease
-COPY --from=install /temp/dev/apps/client/node_modules node_modules
+# COPY --from=install /temp/dev/apps/client/node_modules node_modules
+COPY --from=install /temp/dev/node_modules node_modules
 COPY ./apps/client/ .
 
 # [optional] tests & build
@@ -35,11 +37,12 @@ RUN bun run build
 
 # copy production dependencies and source code into final image
 FROM base AS release
-COPY --from=install /temp/prod/apps/client/node_modules node_modules
+# COPY --from=install /temp/prod/apps/client/node_modules node_modules
+COPY --from=install /temp/prod/node_modules node_modules
 COPY --from=prerelease /usr/src/app/index.ts .
 COPY --from=prerelease /usr/src/app/package.json .
 
 # run the app
 USER bun
-EXPOSE 3000/tcp
+EXPOSE 5173/tcp
 ENTRYPOINT [ "bun", "run", "index.ts" ]
