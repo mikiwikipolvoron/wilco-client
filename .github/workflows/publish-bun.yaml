@@ -32,8 +32,9 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v5
       - name: Set up bun
-        uses: oven-sh/setup-bun@v2
+        uses: oven-sh/setup-bun@v2.0.2
         with:
+          bun-version: latest
           registries: |
             https://registry.npmjs.org/
             @mikiwikipolvoron:https://npm.pkg.github.com/|$GITHUB_TOKEN
