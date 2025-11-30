@@ -29,3 +29,6 @@ jobs:
           context: .
           push: true
           tags: ${{ github.repository }}
+          secrets: |
+            "github_token=${{ secrets.GITHUB_TOKEN }}"
+
