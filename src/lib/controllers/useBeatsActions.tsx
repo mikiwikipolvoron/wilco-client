@@ -1,15 +1,15 @@
-import type { ClientBeatsEvent, ClientGlobalEvent, ClientServiceEvent } from "@wilco/shared/events";
+import type { ClientBeatsEvent, ClientGlobalEvent, ClientServiceEvent } from "@mikiwikipolvoron/wilco/events";
 import { useSocketStore } from "../stores/useSocketStore";
 
 export function useClientActions() {
-	const socket = useSocketStore();
+    const socket = useSocketStore();
 
-	return {
-		// Service actions
+    return {
+        // Service actions
         tap: () => {
             const event: ClientBeatsEvent = { type: "tap", timestamp: Date.now() };
             socket.emit(event);
         }
 
-	};
+    };
 }

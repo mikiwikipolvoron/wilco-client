@@ -1,5 +1,5 @@
 import { create } from "zustand";
-import type { ARPhase, ARItem } from "@wilco/shared/data";
+import type { ARPhase, ARItem } from "@mikiwikipolvoron/wilco/data";
 
 interface ARState {
 	// Anchoring

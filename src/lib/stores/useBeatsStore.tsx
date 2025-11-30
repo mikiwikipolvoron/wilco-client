@@ -1,4 +1,4 @@
-import type { BeatsPhase } from "@wilco/shared/data";
+import type { BeatsPhase } from "@mikiwikipolvoron/wilco/data";
 import { create } from "zustand";
 
 interface BeatsStore {
