@@ -39,8 +39,7 @@ jobs:
           scope: "@mikiwikipolvoron"
       - name: Install dependencies
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          INTERNAL_PASSWORD: ${{ secrets.INTERNAL_PASSWORD }}
+          BUN_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: bun install
       - name: Build
         run: bun run build
