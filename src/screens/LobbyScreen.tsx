@@ -1,4 +1,3 @@
-import { EmojiPicker } from "frimousse";
 import { useState } from "react";
 import { useServerStore } from "../lib/stores/useServerStore";
 import { useSocketStore } from "../lib/stores/useSocketStore";
