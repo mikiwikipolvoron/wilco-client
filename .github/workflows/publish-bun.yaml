@@ -35,9 +35,8 @@ jobs:
         uses: oven-sh/setup-bun@v2.0.2
         with:
           bun-version: latest
-          registries: |
-            https://registry.npmjs.org/
-            @mikiwikipolvoron:https://npm.pkg.github.com/|$GITHUB_TOKEN
+          registry-url: "https://npm.pkg.github.com/"
+          scope: "@mikiwikipolvoron"
       - name: Install dependencies
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
