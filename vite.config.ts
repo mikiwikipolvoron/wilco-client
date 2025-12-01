@@ -10,6 +10,9 @@ export default defineConfig(({ mode }) => {
             server: {
                 host: true,
                 allowedHosts: ["https://mikiwikipolvoron.github.io"],
+                cors: {
+                    origin: "https://ws.tardy.sh" 
+                }
             },
             base: '/wilco-client/'
         }
@@ -20,7 +23,7 @@ export default defineConfig(({ mode }) => {
                 host: true,
                 allowedHosts: true,
                 cors: {
-                    origin: "ws.tardy.sh"
+                    origin: "https://ws.tardy.sh"
                 } as CorsOptions
             },
             base: '/'
