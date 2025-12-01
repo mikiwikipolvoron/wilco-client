@@ -1,6 +1,8 @@
 import { useServerSync } from "./lib/hooks/useServerSync";
 import { useServerStore } from "./lib/stores/useServerStore";
 import ClientARScreen from "./screens/ClientARScreen";
+import ClientEnergizerScreen from "./screens/ClientEnergizerScreen";
+import ClientInstrumentsScreen from "./screens/ClientInstrumentsScreen";
 import JoinScreen from "./screens/JoinScreen";
 import LobbyScreen from "./screens/LobbyScreen";
 import StartScreen from "./screens/StartScreen";
@@ -18,6 +20,12 @@ function App() {
 			{connected && currentActivity === "lobby" && <LobbyScreen />}
 			{connected && currentActivity === "beats" && <TapBeatsScreen />}
 			{connected && currentActivity === "ar" && <ClientARScreen />}
+			{connected && currentActivity === "energizer" && (
+				<ClientEnergizerScreen />
+			)}
+			{connected && currentActivity === "instruments" && (
+				<ClientInstrumentsScreen />
+			)}
 		</>
 	);
 }
