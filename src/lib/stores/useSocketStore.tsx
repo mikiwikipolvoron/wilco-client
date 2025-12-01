@@ -4,7 +4,7 @@ import { create } from "zustand";
 
 // const SERVER_URL = `http://localhost:4000`;
 const SERVER_URL = `https://ws.tardy.sh`;
-console.log(SERVER_URL)
+console.debug(SERVER_URL)
 interface SocketStore {
 	socket: Socket | null;
 	connect: () => void;
