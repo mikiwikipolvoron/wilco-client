@@ -1,4 +1,4 @@
-import { defineConfig } from 'vite'
+import { defineConfig, type CorsOptions } from 'vite'
 import react from '@vitejs/plugin-react'
 import tailwindcss from '@tailwindcss/vite'
 
@@ -18,7 +18,10 @@ export default defineConfig(({ mode }) => {
             plugins: [react(), tailwindcss()],
             server: {
                 host: true,
-                allowedHosts: true
+                allowedHosts: true,
+                cors: {
+                    origin: "ws.tardy.sh"
+                } as CorsOptions
             },
             base: '/'
         }
