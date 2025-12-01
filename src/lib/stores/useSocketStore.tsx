@@ -3,7 +3,7 @@ import { io, type Socket } from "socket.io-client";
 import { create } from "zustand";
 
 // const SERVER_URL = `http://localhost:4000`;
-const SERVER_URL = `https://ws.tardy.sh`;
+const SERVER_URL = `wss://ws.tardy.sh`;
 console.log(SERVER_URL)
 interface SocketStore {
 	socket: Socket | null;
