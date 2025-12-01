@@ -22,9 +22,6 @@ export default defineConfig(({ mode }) => {
             server: {
                 host: true,
                 allowedHosts: true,
-                cors: {
-                    origin: "https://ws.tardy.sh"
-                } as CorsOptions
             },
             base: '/'
         }
