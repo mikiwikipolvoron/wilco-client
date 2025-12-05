@@ -30,6 +30,7 @@ export default function EnergizerScreen() {
 	const [selectedColor, setSelectedColor] = useState<string | null>(null);
 	const [selection, setSelection] = useState<Map<number, string>>(new Map());
 	const [leverProgress, setLeverProgress] = useState(0);
+	const [leverLocked, setLeverLocked] = useState(false);
 	const [isSwiping, setIsSwiping] = useState(false);
 	const [idleWarning, setIdleWarning] = useState(false);
 	const palette = useMemo(
@@ -50,6 +51,7 @@ export default function EnergizerScreen() {
 	const lastSentRef = useRef(0);
 	const swipeStartY = useRef<number | null>(null);
 	const swipeRef = useRef<HTMLDivElement | null>(null);
+	const sliderTrackRef = useRef<HTMLDivElement | null>(null);
 
 	useEffect(() => {
 		connect();
@@ -200,31 +202,47 @@ export default function EnergizerScreen() {
 	}
 
 	function handleSwipeStart(clientY: number) {
+		if (leverLocked || phase !== "send_energy") return;
 		swipeStartY.current = clientY;
 		setIsSwiping(true);
 	}
 
-	function handleSwipeMove(clientY: number) {
-		if (!isSwiping || swipeStartY.current === null) return;
-		const containerHeight = swipeRef.current?.clientHeight ?? window.innerHeight * 0.6;
-		const delta = Math.max(0, swipeStartY.current - clientY);
-		const progress = Math.min(1, delta / containerHeight);
+	function updateLeverFromPointer(clientY: number) {
+		if (!isSwiping || leverLocked || phase !== "send_energy") return;
+		const trackRect = sliderTrackRef.current?.getBoundingClientRect();
+		const containerRect = swipeRef.current?.getBoundingClientRect();
+		const height = trackRect?.height ?? containerRect?.height ?? window.innerHeight * 0.6;
+		const top = trackRect?.top ?? swipeStartY.current ?? clientY;
+		const bottom = top + height;
+		const clampedY = Math.min(Math.max(clientY, top), bottom);
+		const progress = Math.min(1, Math.max(0, 1 - (clampedY - top) / height));
 		setLeverProgress(progress);
 		if (progress >= 0.98) {
+			setLeverLocked(true);
+			setLeverProgress(1);
 			sendSwipe(charge);
-			setIsSwiping(false);
-			setLeverProgress(0);
-			swipeStartY.current = null;
 		}
 	}
 
+	function handleSwipeMove(clientY: number) {
+		updateLeverFromPointer(clientY);
+	}
+
 	function handleSwipeEnd() {
-		if (isSwiping) {
+		if (isSwiping && !leverLocked) {
 			setLeverProgress(0);
 		}
 		setIsSwiping(false);
 		swipeStartY.current = null;
 	}
+
+	useEffect(() => {
+		if (phase !== "send_energy") {
+			setLeverProgress(0);
+			setLeverLocked(false);
+			setIsSwiping(false);
+		}
+	}, [phase]);
 
 	return (
 		<div className="min-h-screen w-full flex flex-col items-center justify-center gap-6 p-6 text-white bg-gradient-to-b from-slate-950 via-slate-900 to-slate-950">
@@ -318,24 +336,36 @@ export default function EnergizerScreen() {
 				>
 					<div className="absolute inset-0 bg-gradient-to-b from-emerald-900/60 via-slate-950 to-black" />
 					<div className="absolute top-4 w-full text-center text-xl font-semibold">
-						Swipe up to transfer charge
+						{leverLocked ? "" : "Swipe up to transfer charge"}
 					</div>
-					<div className="w-24 h-full rounded-full bg-slate-800 border-4 border-emerald-300/60 relative overflow-hidden flex items-end justify-center">
+					{!leverLocked && (
 						<div
-							className="absolute bottom-0 left-0 right-0 bg-emerald-400/80 transition-all duration-75"
+							ref={sliderTrackRef}
+							className="w-20 h-[82%] rounded-full bg-slate-800/90 border-4 border-emerald-300/60 relative overflow-hidden flex items-end justify-center backdrop-blur-sm mt-10"
+						>
+						<div
+							className="absolute bottom-0 left-0 right-0 bg-emerald-400/80 transition-[height] duration-150 ease-out"
 							style={{ height: `${leverProgress * 100}%` }}
 						/>
 						<div
-							className="absolute w-16 h-16 rounded-full bg-white/80 text-black font-bold grid place-items-center shadow-xl"
+							className="absolute w-14 h-14 rounded-full bg-white text-black font-bold grid place-items-center shadow-xl border border-emerald-400/70"
 							style={{
 								bottom: `${leverProgress * 100}%`,
 								transform: "translateY(50%)",
-								transition: "bottom 80ms linear",
+								transition: "bottom 150ms ease-out",
 							}}
 						>
-							⬆️
+								GO
+							</div>
 						</div>
-					</div>
+					)}
+					{leverLocked && (
+						<div className="absolute inset-0 flex items-center justify-center">
+							<div className="px-5 py-4 rounded-2xl bg-emerald-500 text-black font-bold text-2xl shadow-lg">
+								Charge sent!
+							</div>
+						</div>
+					)}
 				</div>
 			)}
 
