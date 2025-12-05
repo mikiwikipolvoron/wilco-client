@@ -1,10 +1,13 @@
 import { Howl } from "howler";
-import { useEffect, useRef, useState } from "react";
+import type { KeyboardEvent } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import * as THREE from "three";
 import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
 import { useARSync } from "../lib/hooks/useARSync";
 import { useARStore } from "../lib/stores/useARStore";
 import { useSocketStore } from "../lib/stores/useSocketStore";
+
+type BossHit = { id: number; value: number; x: number; y: number };
 
 export default function ClientARScreen() {
 	const { phase, isAnchored, items } = useARStore();
@@ -25,6 +28,7 @@ export default function ClientARScreen() {
 	const [calibratedBeta, setCalibratedBeta] = useState<number | null>(null); // Surface level (tilt)
 	const [showCalibrationPrompt, setShowCalibrationPrompt] = useState(false);
 	const [playerTapCount, setPlayerTapCount] = useState(0); // Track player's personal tap count
+	const [bossHits, setBossHits] = useState<BossHit[]>([]);
 
 	// Sound effects
 	const itemTapSoundRef = useRef<Howl | null>(null);
@@ -62,11 +66,12 @@ export default function ClientARScreen() {
 	}, []);
 
 	// Animate item removal with explosion effect
-	const animateItemRemoval = (mesh: THREE.Object3D, onComplete: () => void) => {
-		const startScale = mesh.scale.clone();
-		const startPosition = mesh.position.clone();
-		const startTime = Date.now();
-		const duration = 400; // 400ms animation
+	const animateItemRemoval = useCallback(
+		(mesh: THREE.Object3D, onComplete: () => void) => {
+			const startScale = mesh.scale.clone();
+			const startPosition = mesh.position.clone();
+			const startTime = Date.now();
+			const duration = 400; // 400ms animation
 
 		// Create particle explosion effect
 		const particleCount = 8;
@@ -146,8 +151,10 @@ export default function ClientARScreen() {
 			}
 		};
 
-		animate();
-	};
+			animate();
+		},
+		[],
+	);
 
 	// Request camera permissions and start video feed
 	useEffect(() => {
@@ -479,7 +486,7 @@ export default function ClientARScreen() {
 				console.error("[ARScreen] Error loading model:", error);
 			},
 		);
-	}, [items, calibratedHeading, calibratedBeta]);
+	}, [items, calibratedHeading, calibratedBeta, animateItemRemoval]);
 
 	// Handle tapping on items using raycasting
 	const handleScreenTap = () => {
@@ -604,6 +611,21 @@ export default function ClientARScreen() {
 
 					hitAnimate();
 					console.log("[ARScreen] Boss hit! Damage dealt!");
+
+					// Floating damage text
+					const dmgValue = 8 + Math.floor(Math.random() * 7); // 8-14
+					const id = Date.now();
+					const x = 35 + Math.random() * 30; // percentage across screen
+					const y = 30 + Math.random() * 30;
+					setBossHits((prev: BossHit[]) => [
+						...prev,
+						{ id, value: dmgValue, x, y },
+					]);
+					setTimeout(() => {
+						setBossHits((prev: BossHit[]) =>
+							prev.filter((hit: BossHit) => hit.id !== id),
+						);
+					}, 900);
 				}
 
 				// Notify server (can tap boss multiple times)
@@ -611,6 +633,13 @@ export default function ClientARScreen() {
 					socket.emit("client_event", { type: "tap_item", itemId });
 				}
 			}
+		}
+	};
+
+	const handleTapOverlayKeyDown = (event: KeyboardEvent<HTMLDivElement>) => {
+		if (event.key === "Enter" || event.key === " ") {
+			event.preventDefault();
+			handleScreenTap();
 		}
 	};
 
@@ -686,7 +715,26 @@ export default function ClientARScreen() {
 				style={{ zIndex: 20 }}
 				onClick={handleScreenTap}
 				onTouchStart={handleScreenTap}
+				onKeyDown={handleTapOverlayKeyDown}
+				role="button"
+				tabIndex={0}
+				aria-label="Tap to attack"
 			/>
+
+			{/* Boss damage overlays */}
+			{bossHits.map((hit) => (
+				<div
+					key={hit.id}
+					className="absolute text-4xl font-extrabold text-red-400 drop-shadow-[0_4px_12px_rgba(0,0,0,0.6)] animate-[floatUp_0.9s_ease-out_forwards] pointer-events-none select-none"
+					style={{
+						left: `${hit.x}%`,
+						top: `${hit.y}%`,
+						zIndex: 25,
+					}}
+				>
+					-{hit.value}
+				</div>
+			))}
 
 			{/* Item Counter - Top of screen */}
 			{gyroReady &&
@@ -762,6 +810,7 @@ export default function ClientARScreen() {
 							<h2 className="text-3xl font-bold mb-3">Enable Motion Sensors</h2>
 							<p className="text-xl mb-6">Tap to allow gyroscope access</p>
 							<button
+								type="button"
 								className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-8 rounded-lg text-xl"
 								onClick={() => (window as any).requestGyroPermission()}
 							>
@@ -780,6 +829,7 @@ export default function ClientARScreen() {
 							This helps position items correctly
 						</p>
 						<button
+							type="button"
 							className="bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-8 rounded-lg text-xl"
 							onClick={handleCalibrate}
 						>
