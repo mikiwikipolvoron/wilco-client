@@ -138,7 +138,10 @@ function InstructionsPhase({
 				<div className="text-5xl font-bold leading-tight">
 					Look at the entertainer screen to understand the game
 				</div>
-				<div className="text-4xl font-bold animate-pulse mt-12" style={{ color: teamColor }}>
+				<div
+					className="text-4xl font-bold animate-pulse mt-12"
+					style={{ color: teamColor }}
+				>
 					Get ready to tap!
 				</div>
 			</div>
