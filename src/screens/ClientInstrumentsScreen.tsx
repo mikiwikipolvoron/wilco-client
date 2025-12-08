@@ -51,8 +51,11 @@ export default function InstrumentsScreen() {
 	const { sendMotion } = useInstrumentActions();
 
 	const [phase, setPhase] = useState<InstrumentsPhase>("demo");
-	const [demoInstrument, setDemoInstrument] = useState<InstrumentInfo | null>(null);
-	const [assignedInstrument, setAssignedInstrument] = useState<InstrumentInfo | null>(null);
+	const [demoInstrument, setDemoInstrument] = useState<InstrumentInfo | null>(
+		null,
+	);
+	const [assignedInstrument, setAssignedInstrument] =
+		useState<InstrumentInfo | null>(null);
 	const [glow, setGlow] = useState(false);
 	const lastSentRef = useRef(0);
 	const glowTimeout = useRef<NodeJS.Timeout | null>(null);
@@ -93,11 +96,8 @@ export default function InstrumentsScreen() {
 			if (!acc) return;
 			const magnitude = Math.max(
 				0,
-				Math.sqrt(
-					Math.pow(acc.x ?? 0, 2) +
-						Math.pow(acc.y ?? 0, 2) +
-						Math.pow(acc.z ?? 0, 2),
-				) - 9.81,
+				Math.sqrt((acc.x ?? 0) ** 2 + (acc.y ?? 0) ** 2 + (acc.z ?? 0) ** 2) -
+					9.81,
 			);
 			if (magnitude < 1) return;
 			const now = Date.now();
@@ -116,7 +116,8 @@ export default function InstrumentsScreen() {
 		glowTimeout.current = setTimeout(() => setGlow(false), 400);
 	}
 
-	const infoToShow = assignedInstrument ?? demoInstrument ?? FALLBACK_INSTRUMENTS.drums;
+	const infoToShow =
+		assignedInstrument ?? demoInstrument ?? FALLBACK_INSTRUMENTS.drums;
 	const toolImage = INSTRUMENT_IMAGES[infoToShow.id];
 	const bg = useMemo(
 		() => (phase === "demo" ? "#0f172a" : infoToShow.color),
@@ -135,26 +136,29 @@ export default function InstrumentsScreen() {
 				<div className="text-3xl font-extrabold">{infoToShow.name}</div>
 				<div className="text-lg text-slate-200 mt-1">{infoToShow.hint}</div>
 				<div className="mt-6">
-					 <div
+					<div
 						className={`mx-auto w-40 h-40 rounded-2xl border-4 border-white/30 grid place-items-center text-xl font-bold transition-all ${
-						glow ? "scale-105 shadow-[0_0_30px_rgba(255,255,255,0.6)]" : "shadow-none"
+							glow
+								? "scale-105 shadow-[0_0_30px_rgba(255,255,255,0.6)]"
+								: "shadow-none"
 						}`}
 						style={{ backgroundColor: infoToShow.color, overflow: "hidden" }}
 					>
 						{toolImage ? (
-						<img
-							src={toolImage}
-							alt="Maracas"
-							className="w-full h-full object-contain pointer-events-none select-none"
-						/>
+							<img
+								src={toolImage}
+								alt="Maracas"
+								className="w-full h-full object-contain pointer-events-none select-none"
+							/>
 						) : (
-						infoToShow.tool
+							infoToShow.tool
 						)}
 					</div>
 				</div>
 				{phase === "finale" && (
 					<div className="mt-6 text-base text-slate-100">
-						Keep moving your {infoToShow.tool}! Glow pulses confirm your movement.
+						Keep moving your {infoToShow.tool}! Glow pulses confirm your
+						movement.
 					</div>
 				)}
 			</div>
