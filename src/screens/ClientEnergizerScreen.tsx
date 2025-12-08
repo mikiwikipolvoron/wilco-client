@@ -4,14 +4,10 @@ import type {
 } from "@mikiwikipolvoron/wilco-lib/events";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useEnergizerActions } from "../lib/controllers/useEnergizerActions";
-import { useSocketStore } from "../lib/stores/useSocketStore";
 import { useServerStore } from "../lib/stores/useServerStore";
+import { useSocketStore } from "../lib/stores/useSocketStore";
 
-type LocalPhase =
-	| EnergizerPhase
-	| "sequence_show"
-	| "sequence_input"
-	| "idle";
+type LocalPhase = EnergizerPhase | "sequence_show" | "sequence_input" | "idle";
 
 export default function EnergizerScreen() {
 	const { connect, socket } = useSocketStore();
@@ -24,7 +20,12 @@ export default function EnergizerScreen() {
 	const [spotlight, setSpotlight] = useState(false);
 	const [lastShake, setLastShake] = useState(0);
 	const [sequenceAllowed, setSequenceAllowed] = useState(false);
-	const [sequencePalette] = useState(["#ff63c3", "#ffa347", "#44a0ff", "#3ed17a"]);
+	const [sequencePalette] = useState([
+		"#ff63c3",
+		"#ffa347",
+		"#44a0ff",
+		"#3ed17a",
+	]);
 	const [gridRows, setGridRows] = useState(2);
 	const [gridCols, setGridCols] = useState(4);
 	const [selectedColor, setSelectedColor] = useState<string | null>(null);
@@ -71,7 +72,10 @@ export default function EnergizerScreen() {
 					}
 					break;
 				case "energizer_instruction":
-					if (event.phase === "instructions1" || event.phase === "instructions2") {
+					if (
+						event.phase === "instructions1" ||
+						event.phase === "instructions2"
+					) {
 						setPhase(event.phase);
 					}
 					break;
@@ -122,11 +126,8 @@ export default function EnergizerScreen() {
 
 			const magnitude = Math.max(
 				0,
-				Math.sqrt(
-					Math.pow(acc.x ?? 0, 2) +
-						Math.pow(acc.y ?? 0, 2) +
-						Math.pow(acc.z ?? 0, 2),
-				) - 9.81,
+				Math.sqrt((acc.x ?? 0) ** 2 + (acc.y ?? 0) ** 2 + (acc.z ?? 0) ** 2) -
+					9.81,
 			);
 
 			const now = Date.now();
@@ -211,7 +212,8 @@ export default function EnergizerScreen() {
 		if (!isSwiping || leverLocked || phase !== "send_energy") return;
 		const trackRect = sliderTrackRef.current?.getBoundingClientRect();
 		const containerRect = swipeRef.current?.getBoundingClientRect();
-		const height = trackRect?.height ?? containerRect?.height ?? window.innerHeight * 0.6;
+		const height =
+			trackRect?.height ?? containerRect?.height ?? window.innerHeight * 0.6;
 		const top = trackRect?.top ?? swipeStartY.current ?? clientY;
 		const bottom = top + height;
 		const clampedY = Math.min(Math.max(clientY, top), bottom);
@@ -278,37 +280,46 @@ export default function EnergizerScreen() {
 			{phase === "movement" && (
 				<div
 					className={`relative w-full h-[80vh] max-h-[780px] max-w-md rounded-3xl overflow-hidden border ${
-						spotlight ? "border-yellow-500 bg-yellow-300" : "border-cyan-400/40 bg-slate-900"
+						spotlight
+							? "border-yellow-500 bg-yellow-300"
+							: "border-cyan-400/40 bg-slate-900"
 					}`}
 				>
 					<div
 						className={`absolute inset-0 ${
-							spotlight ? "bg-yellow-300" : "bg-gradient-to-b from-slate-900 via-slate-950 to-black"
+							spotlight
+								? "bg-yellow-300"
+								: "bg-gradient-to-b from-slate-900 via-slate-950 to-black"
 						}`}
 					/>
 					<div
 						className="absolute inset-4 rounded-2xl border border-white/30 overflow-hidden"
 						style={{
-							boxShadow: spotlight ? "0 0 55px rgba(234,179,8,0.55)" : "0 0 30px rgba(56,189,248,0.25)",
+							boxShadow: spotlight
+								? "0 0 55px rgba(234,179,8,0.55)"
+								: "0 0 30px rgba(56,189,248,0.25)",
 						}}
 					>
 						<div
 							className="absolute inset-0 transition-all duration-300"
-						style={{
-							background: spotlight
-								? "linear-gradient(180deg, #000000, #000000ee)"
-								: `linear-gradient(180deg, ${fillColor}, ${fillColor}cc)`,
-							height: `${chargePercent}%`,
-							top: "auto",
-							bottom: 0,
-							left: 0,
-							right: 0,
-							transformOrigin: "bottom",
-						}}
-					/>
+							style={{
+								background: spotlight
+									? "linear-gradient(180deg, #000000, #000000ee)"
+									: `linear-gradient(180deg, ${fillColor}, ${fillColor}cc)`,
+								height: `${chargePercent}%`,
+								top: "auto",
+								bottom: 0,
+								left: 0,
+								right: 0,
+								transformOrigin: "bottom",
+							}}
+						/>
 					</div>
 					<div className="absolute inset-0 flex items-center justify-center text-5xl font-extrabold tracking-wide mix-blend-screen text-black drop-shadow-lg px-4 text-center">
-						{spotlight ? "SPOTLIGHT BONUS" : `${chargePercent}%`}
+						<p>{spotlight ? "SPOTLIGHT BONUS" : `${chargePercent}%`}</p>
+						<p>
+							<ComboLevelDisplay percentage={chargePercent} />
+						</p>
 					</div>
 					{idleWarning && (
 						<div className="absolute inset-0 flex items-center justify-center">
@@ -343,18 +354,18 @@ export default function EnergizerScreen() {
 							ref={sliderTrackRef}
 							className="w-20 h-[82%] rounded-full bg-slate-800/90 border-4 border-emerald-300/60 relative overflow-hidden flex items-end justify-center backdrop-blur-sm mt-10"
 						>
-						<div
-							className="absolute bottom-0 left-0 right-0 bg-emerald-400/80 transition-[height] duration-150 ease-out"
-							style={{ height: `${leverProgress * 100}%` }}
-						/>
-						<div
-							className="absolute w-14 h-14 rounded-full bg-white text-black font-bold grid place-items-center shadow-xl border border-emerald-400/70"
-							style={{
-								bottom: `${leverProgress * 100}%`,
-								transform: "translateY(50%)",
-								transition: "bottom 150ms ease-out",
-							}}
-						>
+							<div
+								className="absolute bottom-0 left-0 right-0 bg-emerald-400/80 transition-[height] duration-150 ease-out"
+								style={{ height: `${leverProgress * 100}%` }}
+							/>
+							<div
+								className="absolute w-14 h-14 rounded-full bg-white text-black font-bold grid place-items-center shadow-xl border border-emerald-400/70"
+								style={{
+									bottom: `${leverProgress * 100}%`,
+									transform: "translateY(50%)",
+									transition: "bottom 150ms ease-out",
+								}}
+							>
 								GO
 							</div>
 						</div>
@@ -389,6 +400,24 @@ export default function EnergizerScreen() {
 				</div>
 			)}
 		</div>
+	);
+}
+
+function ComboLevelDisplay({ percentage }: { percentage: number }) {
+	return (
+		<>
+			{percentage > 0 && percentage <= 25
+				? "1X COMBO"
+				: percentage > 25 && percentage <= 50
+					? "2X COMBO"
+					: percentage > 50 && percentage <= 75
+						? "2X COMBO"
+						: percentage > 75 && percentage <= 100
+							? "2X COMBO"
+							: percentage > 100
+								? "unreachable"
+								: "unreachable"}
+		</>
 	);
 }
 
@@ -462,9 +491,7 @@ function SequenceGrid({
 									backgroundColor: color,
 									borderColor: selectedColor === color ? "#fff" : "#94a3b8",
 								}}
-								onClick={() =>
-									onSelectColor(selectedColor === color ? null : color)
-								}
+								onClick={() => onSelectColor(color)}
 							/>
 						))}
 					</div>
@@ -472,7 +499,7 @@ function SequenceGrid({
 						<button
 							type="button"
 							onClick={onSubmit}
-							className="px-4 py-2 rounded bg-emerald-500 text-white disabled:bg-slate-600"
+							className="px-4 py-2 rounded bg-emerald-500 text-white"
 							disabled={selection.size === 0}
 						>
 							Submit pattern
