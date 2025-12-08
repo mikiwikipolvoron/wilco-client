@@ -1,12 +1,16 @@
-import { SERVER_BEATS_EVENTS, type ServerEvent } from "@mikiwikipolvoron/wilco-lib/events";
+import {
+	SERVER_BEATS_EVENTS,
+	type ServerEvent,
+} from "@mikiwikipolvoron/wilco-lib/events";
 import { useEffect } from "react";
 import { useBeatsStore } from "../stores/useBeatsStore";
-import { useSocketStore } from "../stores/useSocketStore";
 import { useServerStore } from "../stores/useServerStore";
+import { useSocketStore } from "../stores/useSocketStore";
 
 export function useBeatsSync() {
 	const socket = useSocketStore((state) => state.socket);
-	const { setPhase, updateTeamAccuracy, updatePersonalAccuracy } = useBeatsStore();
+	const { setPhase, updateTeamAccuracy, updatePersonalAccuracy } =
+		useBeatsStore();
 	const players = useServerStore((state) => state.players);
 
 	useEffect(() => {
@@ -28,7 +32,9 @@ export function useBeatsSync() {
 					const myGroupId = myPlayer?.groupId;
 
 					if (myGroupId) {
-						const myGroup = event.groupAccuracies.find(g => g.groupId === myGroupId);
+						const myGroup = event.groupAccuracies.find(
+							(g) => g.groupId === myGroupId,
+						);
 						if (myGroup) {
 							// Update team accuracy
 							updateTeamAccuracy(myGroup.accuracy);
