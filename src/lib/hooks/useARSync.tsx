@@ -1,7 +1,7 @@
-import { useEffect } from "react";
-import { useSocketStore } from "../stores/useSocketStore";
-import { useARStore } from "../stores/useARStore";
 import type { ServerEvent } from "@mikiwikipolvoron/wilco-lib/events";
+import { useEffect } from "react";
+import { useARStore } from "../stores/useARStore";
+import { useSocketStore } from "../stores/useSocketStore";
 
 export function useARSync() {
 	const socket = useSocketStore((state) => state.socket);
@@ -29,7 +29,9 @@ export function useARSync() {
 					console.log(
 						`[ARSync] Item collected! Total: ${event.tapCount}/${event.tapsNeeded}`,
 					);
-					useARStore.getState().updateProgress(event.tapCount, event.tapsNeeded);
+					useARStore
+						.getState()
+						.updateProgress(event.tapCount, event.tapsNeeded);
 					break;
 
 				case "ar_results":
