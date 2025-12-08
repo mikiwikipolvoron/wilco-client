@@ -73,83 +73,83 @@ export default function ClientARScreen() {
 			const startTime = Date.now();
 			const duration = 400; // 400ms animation
 
-		// Create particle explosion effect
-		const particleCount = 8;
-		const particles: THREE.Mesh[] = [];
-		const particleVelocities: THREE.Vector3[] = [];
+			// Create particle explosion effect
+			const particleCount = 8;
+			const particles: THREE.Mesh[] = [];
+			const particleVelocities: THREE.Vector3[] = [];
 
-		if (sceneRef.current) {
-			for (let i = 0; i < particleCount; i++) {
-				const geometry = new THREE.SphereGeometry(0.3, 8, 8);
-				const material = new THREE.MeshBasicMaterial({
-					color: 0xffaa00,
-					transparent: true,
-					opacity: 1,
+			if (sceneRef.current) {
+				for (let i = 0; i < particleCount; i++) {
+					const geometry = new THREE.SphereGeometry(0.3, 8, 8);
+					const material = new THREE.MeshBasicMaterial({
+						color: 0xffaa00,
+						transparent: true,
+						opacity: 1,
+					});
+					const particle = new THREE.Mesh(geometry, material);
+					particle.position.copy(startPosition);
+
+					// Random velocity in all directions
+					const angle = (i / particleCount) * Math.PI * 2;
+					const speed = 3 + Math.random() * 2;
+					particleVelocities.push(
+						new THREE.Vector3(
+							Math.cos(angle) * speed,
+							Math.random() * speed * 0.5,
+							Math.sin(angle) * speed,
+						),
+					);
+
+					sceneRef.current.add(particle);
+					particles.push(particle);
+				}
+			}
+
+			const animate = () => {
+				const elapsed = Date.now() - startTime;
+				const progress = Math.min(elapsed / duration, 1);
+
+				// Main item: expand then shrink with rotation
+				if (progress < 0.3) {
+					// First 30%: quick expand
+					const expandScale = 1 + progress * 3;
+					mesh.scale.set(
+						startScale.x * expandScale,
+						startScale.y * expandScale,
+						startScale.z * expandScale,
+					);
+				} else {
+					// Then shrink rapidly
+					const shrinkProgress = (progress - 0.3) / 0.7;
+					const scale = startScale.x * (1 - shrinkProgress);
+					mesh.scale.set(scale, scale, scale);
+				}
+
+				// Fast rotation
+				mesh.rotation.y += 0.3;
+				mesh.rotation.x += 0.2;
+
+				// Animate particles
+				particles.forEach((particle, i) => {
+					const velocity = particleVelocities[i];
+					particle.position.add(
+						velocity.clone().multiplyScalar(0.016 * (1 - progress)),
+					);
+					(particle.material as THREE.MeshBasicMaterial).opacity = 1 - progress;
 				});
-				const particle = new THREE.Mesh(geometry, material);
-				particle.position.copy(startPosition);
 
-				// Random velocity in all directions
-				const angle = (i / particleCount) * Math.PI * 2;
-				const speed = 3 + Math.random() * 2;
-				particleVelocities.push(
-					new THREE.Vector3(
-						Math.cos(angle) * speed,
-						Math.random() * speed * 0.5,
-						Math.sin(angle) * speed,
-					),
-				);
-
-				sceneRef.current.add(particle);
-				particles.push(particle);
-			}
-		}
-
-		const animate = () => {
-			const elapsed = Date.now() - startTime;
-			const progress = Math.min(elapsed / duration, 1);
-
-			// Main item: expand then shrink with rotation
-			if (progress < 0.3) {
-				// First 30%: quick expand
-				const expandScale = 1 + progress * 3;
-				mesh.scale.set(
-					startScale.x * expandScale,
-					startScale.y * expandScale,
-					startScale.z * expandScale,
-				);
-			} else {
-				// Then shrink rapidly
-				const shrinkProgress = (progress - 0.3) / 0.7;
-				const scale = startScale.x * (1 - shrinkProgress);
-				mesh.scale.set(scale, scale, scale);
-			}
-
-			// Fast rotation
-			mesh.rotation.y += 0.3;
-			mesh.rotation.x += 0.2;
-
-			// Animate particles
-			particles.forEach((particle, i) => {
-				const velocity = particleVelocities[i];
-				particle.position.add(
-					velocity.clone().multiplyScalar(0.016 * (1 - progress)),
-				);
-				(particle.material as THREE.MeshBasicMaterial).opacity = 1 - progress;
-			});
-
-			if (progress < 1) {
-				requestAnimationFrame(animate);
-			} else {
-				// Cleanup particles
-				particles.forEach((particle) => {
-					sceneRef.current?.remove(particle);
-					particle.geometry.dispose();
-					(particle.material as THREE.Material).dispose();
-				});
-				onComplete();
-			}
-		};
+				if (progress < 1) {
+					requestAnimationFrame(animate);
+				} else {
+					// Cleanup particles
+					particles.forEach((particle) => {
+						sceneRef.current?.remove(particle);
+						particle.geometry.dispose();
+						(particle.material as THREE.Material).dispose();
+					});
+					onComplete();
+				}
+			};
 
 			animate();
 		},
@@ -207,10 +207,8 @@ export default function ClientARScreen() {
 				typeof (DeviceOrientationEvent as any).requestPermission === "function"
 			) {
 				try {
-					const permission = await (
-                        // biome-ignore lint: any
-						DeviceOrientationEvent as any
-					).requestPermission();
+					const permission = await // biome-ignore lint: any
+					(DeviceOrientationEvent as any).requestPermission();
 					if (permission === "granted") {
 						console.log("[ARScreen] ✅ Gyroscope permission granted!");
 						setGyroReady(true);
@@ -693,48 +691,55 @@ export default function ClientARScreen() {
 	return (
 		<div className="fixed inset-0 w-full h-full overflow-hidden bg-black">
 			{/* Video feed background */}
-			<video
-				ref={videoRef}
-				autoPlay
-				playsInline
-				muted
-				className="absolute inset-0 w-full h-full object-cover"
-				style={{ zIndex: 1 }}
-			/>
+			{phase !== "results" && (
+				<video
+					ref={videoRef}
+					autoPlay
+					playsInline
+					muted
+					className="absolute inset-0 w-full h-full object-cover"
+					style={{ zIndex: 1 }}
+				/>
+			)}
 
 			{/* Three.js canvas overlay */}
-			<canvas
-				ref={canvasRef}
-				className="absolute inset-0 w-full h-full pointer-events-none"
-				style={{ zIndex: 10 }}
-			/>
+			{phase !== "results" && (
+				<canvas
+					ref={canvasRef}
+					className="absolute inset-0 w-full h-full pointer-events-none"
+					style={{ zIndex: 10 }}
+				/>
+			)}
 
 			{/* Tap detection overlay */}
-			<div
-				className="absolute inset-0 w-full h-full"
-				style={{ zIndex: 20 }}
-				onClick={handleScreenTap}
-				onTouchStart={handleScreenTap}
-				onKeyDown={handleTapOverlayKeyDown}
-				role="button"
-				tabIndex={0}
-				aria-label="Tap to attack"
-			/>
+			{phase !== "results" && (
+				<div
+					className="absolute inset-0 w-full h-full"
+					style={{ zIndex: 20 }}
+					onClick={handleScreenTap}
+					onTouchStart={handleScreenTap}
+					onKeyDown={handleTapOverlayKeyDown}
+					role="button"
+					tabIndex={0}
+					aria-label="Tap to attack"
+				/>
+			)}
 
 			{/* Boss damage overlays */}
-			{bossHits.map((hit) => (
-				<div
-					key={hit.id}
-					className="absolute text-4xl font-extrabold text-red-400 drop-shadow-[0_4px_12px_rgba(0,0,0,0.6)] animate-[floatUp_0.9s_ease-out_forwards] pointer-events-none select-none"
-					style={{
-						left: `${hit.x}%`,
-						top: `${hit.y}%`,
-						zIndex: 25,
-					}}
-				>
-					-{hit.value}
-				</div>
-			))}
+			{phase !== "results" &&
+				bossHits.map((hit) => (
+					<div
+						key={hit.id}
+						className="absolute text-4xl font-extrabold text-red-400 drop-shadow-[0_4px_12px_rgba(0,0,0,0.6)] animate-[floatUp_0.9s_ease-out_forwards] pointer-events-none select-none"
+						style={{
+							left: `${hit.x}%`,
+							top: `${hit.y}%`,
+							zIndex: 25,
+						}}
+					>
+						-{hit.value}
+					</div>
+				))}
 
 			{/* Item Counter - Top of screen */}
 			{gyroReady &&
@@ -868,6 +873,15 @@ export default function ClientARScreen() {
 								<p className="text-lg mt-2">Tap directly on any item you see</p>
 							</>
 						)}
+					</div>
+				)}
+				{phase === "results" && (
+					<div className="bg-black/70 text-white px-6 py-4 rounded-xl text-center">
+							<p className="text-2xl font-bold text-red-400">
+								👑 BOSS DEFEATED 👑!
+							</p>
+							<p className="text-lg mt-2">Point toward entertainer screen!</p>
+							<p className="text-sm mt-1">Everyone must attack together!</p>
 					</div>
 				)}
 			</div>
