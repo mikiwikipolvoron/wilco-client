@@ -10,7 +10,7 @@ import { useSocketStore } from "../lib/stores/useSocketStore";
 type BossHit = { id: number; value: number; x: number; y: number };
 
 export default function ClientARScreen() {
-	const { phase, isAnchored, items } = useARStore();
+	const { phase, isAnchored, items, currentSlide } = useARStore();
 	const socket = useSocketStore((state) => state.socket);
 	const videoRef = useRef<HTMLVideoElement>(null);
 	const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -158,6 +158,11 @@ export default function ClientARScreen() {
 
 	// Request camera permissions and start video feed
 	useEffect(() => {
+		// Only start camera when on slide 3 (calibration instruction) or in anchoring phase
+		if (phase === "instructions" && currentSlide < 3) {
+			return;
+		}
+
 		console.log("[ARScreen] Requesting camera access...");
 		setDebugInfo("Requesting camera...");
 
@@ -194,7 +199,7 @@ export default function ClientARScreen() {
 				stream.getTracks().forEach((track) => track.stop());
 			}
 		};
-	}, []);
+	}, [phase, currentSlide]);
 
 	// Request gyroscope permissions and start orientation tracking
 	useEffect(() => {
@@ -641,13 +646,21 @@ export default function ClientARScreen() {
 		}
 	};
 
-	// Show calibration prompt when gyroscope is ready
+	// Show calibration prompt when gyroscope is ready AND on slide 3 or anchoring phase
 	useEffect(() => {
-		if (gyroReady && !isAnchored && !calibratedHeading) {
+		const shouldShowCalibration =
+			gyroReady &&
+			!isAnchored &&
+			!calibratedHeading &&
+			(phase === "anchoring" || (phase === "instructions" && currentSlide >= 3));
+
+		if (shouldShowCalibration) {
 			setShowCalibrationPrompt(true);
 			setDebugInfo("Point phone at entertainer screen and tap Calibrate");
+		} else {
+			setShowCalibrationPrompt(false);
 		}
-	}, [gyroReady, isAnchored, calibratedHeading]);
+	}, [gyroReady, isAnchored, calibratedHeading, phase, currentSlide]);
 
 	// Handle calibration button click
 	const handleCalibrate = () => {
@@ -690,8 +703,19 @@ export default function ClientARScreen() {
 
 	return (
 		<div className="fixed inset-0 w-full h-full overflow-hidden bg-black">
+			{/* Instructions waiting screen */}
+			{phase === "instructions" && (
+				<div className="absolute inset-0 flex items-center justify-center bg-gradient-to-br from-indigo-900 via-purple-900 to-pink-900" style={{ zIndex: 100 }}>
+					<div className="bg-black/70 backdrop-blur-sm text-white px-12 py-8 rounded-2xl text-center max-w-lg border-2 border-white/30">
+						<h2 className="text-4xl font-bold mb-4">📺 AR Dressing Room Challenge</h2>
+						<p className="text-2xl mb-2">Please look at the entertainer screen</p>
+						<p className="text-xl opacity-80">Follow the instructions on the main screen</p>
+					</div>
+				</div>
+			)}
+
 			{/* Video feed background */}
-			{phase !== "results" && (
+			{phase !== "results" && phase !== "instructions" && (
 				<video
 					ref={videoRef}
 					autoPlay
@@ -703,7 +727,7 @@ export default function ClientARScreen() {
 			)}
 
 			{/* Three.js canvas overlay */}
-			{phase !== "results" && (
+			{phase !== "results" && phase !== "instructions" && (
 				<canvas
 					ref={canvasRef}
 					className="absolute inset-0 w-full h-full pointer-events-none"
@@ -712,7 +736,7 @@ export default function ClientARScreen() {
 			)}
 
 			{/* Tap detection overlay */}
-			{phase !== "results" && (
+			{phase !== "results" && phase !== "instructions" && (
 				<div
 					className="absolute inset-0 w-full h-full"
 					style={{ zIndex: 20 }}
@@ -787,25 +811,26 @@ export default function ClientARScreen() {
 				</div>
 			)}
 
-			{/* UI Overlays */}
-			<div
-				className="flex flex-col items-center justify-center pointer-events-none"
-				style={{
-					position: "fixed",
-					top: 0,
-					left: 0,
-					width: "100vw",
-					height: "100vh",
-					zIndex: 9999,
-				}}
-			>
-				{!cameraReady && (
-					<div className="bg-black/70 text-white px-8 py-6 rounded-xl text-center max-w-md">
-						<div className="animate-spin rounded-full h-16 w-16 border-b-2 border-white mx-auto mb-4" />
-						<h2 className="text-3xl font-bold mb-3">Starting Camera...</h2>
-						<p className="text-xl">Please allow camera access</p>
-					</div>
-				)}
+			{/* UI Overlays - only show when NOT in instructions phase OR when camera not ready (allow camera permission during instructions) */}
+			{(phase !== "instructions" || !cameraReady) && (
+				<div
+					className="flex flex-col items-center justify-center pointer-events-none"
+					style={{
+						position: "fixed",
+						top: 0,
+						left: 0,
+						width: "100vw",
+						height: "100vh",
+						zIndex: 9999,
+					}}
+				>
+					{!cameraReady && (
+						<div className="bg-black/70 text-white px-8 py-6 rounded-xl text-center max-w-md">
+							<div className="animate-spin rounded-full h-16 w-16 border-b-2 border-white mx-auto mb-4" />
+							<h2 className="text-3xl font-bold mb-3">Starting Camera...</h2>
+							<p className="text-xl">Please allow camera access</p>
+						</div>
+					)}
 
 				{cameraReady &&
 					!gyroReady &&
@@ -884,7 +909,8 @@ export default function ClientARScreen() {
 							<p className="text-sm mt-1">Everyone must attack together!</p>
 					</div>
 				)}
-			</div>
+				</div>
+			)}
 		</div>
 	);
 }
