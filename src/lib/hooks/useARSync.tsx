@@ -17,6 +17,11 @@ export function useARSync() {
 					useARStore.getState().setPhase(event.phase);
 					break;
 
+				case "ar_instruction":
+					useARStore.getState().setPhase(event.phase);
+					useARStore.getState().setCurrentSlide(event.slide);
+					break;
+
 				case "ar_items_update":
 					useARStore.getState().updateItems(event.items);
 					break;
