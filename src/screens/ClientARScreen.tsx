@@ -10,7 +10,15 @@ import { useSocketStore } from "../lib/stores/useSocketStore";
 type BossHit = { id: number; value: number; x: number; y: number };
 
 export default function ClientARScreen() {
-	const { phase, isAnchored, items, currentSlide } = useARStore();
+	const {
+		phase,
+		isAnchored,
+		items,
+		currentSlide,
+		calibratedHeading,
+		calibratedBeta,
+		setCalibration,
+	} = useARStore();
 	const socket = useSocketStore((state) => state.socket);
 	const videoRef = useRef<HTMLVideoElement>(null);
 	const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -22,10 +30,6 @@ export default function ClientARScreen() {
 		beta: 0,
 		gamma: 0,
 	});
-	const [calibratedHeading, setCalibratedHeading] = useState<number | null>(
-		null,
-	);
-	const [calibratedBeta, setCalibratedBeta] = useState<number | null>(null); // Surface level (tilt)
 	const [showCalibrationPrompt, setShowCalibrationPrompt] = useState(false);
 	const [playerTapCount, setPlayerTapCount] = useState(0); // Track player's personal tap count
 	const [bossHits, setBossHits] = useState<BossHit[]>([]);
@@ -355,11 +359,23 @@ export default function ClientARScreen() {
 
 	// Spawn 3D items randomly around the player (not in a circle)
 	useEffect(() => {
-		if (!sceneRef.current) return;
-		if (!calibratedHeading || calibratedBeta === null) return; // Don't spawn until calibrated
-		if (items.length === 0) return;
+		if (!sceneRef.current) {
+			console.log("[AR] Items not spawned: scene not ready");
+			return;
+		}
+		if (!calibratedHeading || calibratedBeta === null) {
+			console.log(
+				"[AR] Items not spawned: not calibrated yet. Items in store:",
+				items.length,
+			);
+			return;
+		}
+		if (items.length === 0) {
+			console.log("[AR] Items not spawned: no items from server");
+			return;
+		}
 
-		console.log("[ARScreen] Spawning", items.length, "items in 360° space");
+		console.log("[AR] Spawning items:", items.length);
 
 		const scene = sceneRef.current;
 		const loader = new GLTFLoader();
@@ -668,6 +684,8 @@ export default function ClientARScreen() {
 
 		// Check if phone is held upright (beta between 40-110 degrees)
 		const currentBeta = orientation.beta;
+		const currentHeading = orientation.alpha;
+
 		if (currentBeta < 40 || currentBeta > 110) {
 			setDebugInfo(
 				`Please hold phone upright! Beta: ${currentBeta.toFixed(0)}° (need 40-110°)`,
@@ -678,15 +696,16 @@ export default function ClientARScreen() {
 			return;
 		}
 
-		// Save current compass heading AND surface level (beta) as reference
-		const currentHeading = orientation.alpha;
-
-		setCalibratedHeading(currentHeading);
-		setCalibratedBeta(currentBeta); // Save phone tilt angle during calibration
+		// Store in Zustand (not component state)
+		setCalibration(currentHeading, currentBeta);
 		setShowCalibrationPrompt(false);
 
 		console.log(
-			`[ARScreen] Calibrated! Stage: ${currentHeading.toFixed(0)}°, Beta (tilt): ${currentBeta.toFixed(0)}°`,
+			`[AR] Calibrated and sent anchor_success:`,
+			{
+				heading: currentHeading,
+				beta: currentBeta,
+			},
 		);
 		setDebugInfo(`Calibrated to ${currentHeading.toFixed(0)}°`);
 

@@ -5,6 +5,8 @@ interface ARState {
 	// Anchoring
 	isAnchored: boolean;
 	markerDetected: boolean;
+	calibratedHeading: number | null;
+	calibratedBeta: number | null;
 
 	// Phase & Items
 	phase: ARPhase;
@@ -25,6 +27,7 @@ interface ARState {
 	// Actions
 	setAnchored: (anchored: boolean) => void;
 	setMarkerDetected: (detected: boolean) => void;
+	setCalibration: (heading: number, beta: number) => void;
 	setPhase: (phase: ARPhase) => void;
 	setCurrentSlide: (slide: number) => void;
 	updateItems: (items: ARItem[]) => void;
@@ -37,6 +40,8 @@ interface ARState {
 export const useARStore = create<ARState>((set) => ({
 	isAnchored: false,
 	markerDetected: false,
+	calibratedHeading: null,
+	calibratedBeta: null,
 	phase: "instructions",
 	items: [],
 	currentSlide: 0,
@@ -48,6 +53,8 @@ export const useARStore = create<ARState>((set) => ({
 
 	setAnchored: (anchored) => set({ isAnchored: anchored }),
 	setMarkerDetected: (detected) => set({ markerDetected: detected }),
+	setCalibration: (heading, beta) =>
+		set({ calibratedHeading: heading, calibratedBeta: beta }),
 	setPhase: (phase) => set({ phase }),
 	setCurrentSlide: (slide) => set({ currentSlide: slide }),
 	updateItems: (items) => set({ items }),
@@ -60,6 +67,8 @@ export const useARStore = create<ARState>((set) => ({
 		set({
 			isAnchored: false,
 			markerDetected: false,
+			calibratedHeading: null,
+			calibratedBeta: null,
 			phase: "instructions",
 			items: [],
 			currentSlide: 0,
