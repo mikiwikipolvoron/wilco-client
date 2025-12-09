@@ -14,6 +14,7 @@ export function useARSync() {
 
 			switch (event.type) {
 				case "ar_phase_change":
+					console.log(`[ARSync] Phase changed to: ${event.phase}`);
 					useARStore.getState().setPhase(event.phase);
 					break;
 
@@ -23,6 +24,7 @@ export function useARSync() {
 					break;
 
 				case "ar_items_update":
+					console.log(`[ARSync] Received ${event.items.length} items from server`);
 					useARStore.getState().updateItems(event.items);
 					break;
 
