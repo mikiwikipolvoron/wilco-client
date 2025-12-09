@@ -9,6 +9,7 @@ interface ARState {
 	// Phase & Items
 	phase: ARPhase;
 	items: ARItem[];
+	currentSlide: number;
 
 	// Progress
 	totalTaps: number;
@@ -25,6 +26,7 @@ interface ARState {
 	setAnchored: (anchored: boolean) => void;
 	setMarkerDetected: (detected: boolean) => void;
 	setPhase: (phase: ARPhase) => void;
+	setCurrentSlide: (slide: number) => void;
 	updateItems: (items: ARItem[]) => void;
 	updateProgress: (totalTaps: number, tapsNeeded: number) => void;
 	updateBossHealth: (health: number, maxHealth: number) => void;
@@ -35,8 +37,9 @@ interface ARState {
 export const useARStore = create<ARState>((set) => ({
 	isAnchored: false,
 	markerDetected: false,
-	phase: "anchoring",
+	phase: "instructions",
 	items: [],
+	currentSlide: 0,
 	totalTaps: 0,
 	tapsNeeded: 0,
 	bossHealth: 0,
@@ -46,6 +49,7 @@ export const useARStore = create<ARState>((set) => ({
 	setAnchored: (anchored) => set({ isAnchored: anchored }),
 	setMarkerDetected: (detected) => set({ markerDetected: detected }),
 	setPhase: (phase) => set({ phase }),
+	setCurrentSlide: (slide) => set({ currentSlide: slide }),
 	updateItems: (items) => set({ items }),
 	updateProgress: (totalTaps, tapsNeeded) => set({ totalTaps, tapsNeeded }),
 	updateBossHealth: (health, maxHealth) =>
@@ -56,8 +60,9 @@ export const useARStore = create<ARState>((set) => ({
 		set({
 			isAnchored: false,
 			markerDetected: false,
-			phase: "anchoring",
+			phase: "instructions",
 			items: [],
+			currentSlide: 0,
 			totalTaps: 0,
 			tapsNeeded: 0,
 			bossHealth: 0,
