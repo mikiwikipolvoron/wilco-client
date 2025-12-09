@@ -20,6 +20,7 @@ export default function EnergizerScreen() {
 	const [spotlight, setSpotlight] = useState(false);
 	const [lastShake, setLastShake] = useState(0);
 	const [sequenceAllowed, setSequenceAllowed] = useState(false);
+	const [currentSlide, setCurrentSlide] = useState(0);
 	const [sequencePalette] = useState([
 		"#ff63c3",
 		"#ffa347",
@@ -77,6 +78,7 @@ export default function EnergizerScreen() {
 						event.phase === "instructions2"
 					) {
 						setPhase(event.phase);
+						setCurrentSlide(event.slide);
 					}
 					break;
 				case "energizer_player_update":
@@ -266,7 +268,7 @@ export default function EnergizerScreen() {
 				</div>
 			) : null}
 
-			{phase === "instructions1" && (
+			{phase === "instructions1" && currentSlide >= 4 && (
 				<button
 					type="button"
 					onClick={enableMotion}
@@ -314,6 +316,17 @@ export default function EnergizerScreen() {
 								transformOrigin: "bottom",
 							}}
 						/>
+						{/* Electricity sparkle animation */}
+						<div
+							className="absolute inset-0 pointer-events-none"
+							style={{
+								height: `${chargePercent}%`,
+								top: "auto",
+								bottom: 0,
+							}}
+						>
+							<ElectricitySparkles color={fillColor} />
+						</div>
 					</div>
 					<div className="absolute inset-0 flex items-center justify-center text-5xl font-extrabold tracking-wide mix-blend-screen text-black drop-shadow-lg px-4 text-center">
 						<p>{spotlight ? "SPOTLIGHT BONUS" : `${chargePercent}%`}</p>
@@ -507,6 +520,53 @@ function SequenceGrid({
 					</div>
 				</>
 			)}
+		</div>
+	);
+}
+
+function ElectricitySparkles({ color }: { color: string }) {
+	const sparkles = Array.from({ length: 12 }, (_, i) => i);
+
+	return (
+		<div className="absolute inset-0 overflow-hidden">
+			<style>{`
+				@keyframes spark {
+					0%, 100% { opacity: 0; transform: scale(0) translateY(0); }
+					50% { opacity: 1; transform: scale(1) translateY(-20px); }
+				}
+				@keyframes lightning {
+					0%, 100% { opacity: 0; }
+					50% { opacity: 0.4; }
+				}
+			`}</style>
+			{sparkles.map((i) => (
+				<div
+					key={i}
+					className="absolute"
+					style={{
+						left: `${Math.random() * 100}%`,
+						bottom: `${Math.random() * 100}%`,
+						animation: `spark ${1.5 + Math.random() * 1}s ease-in-out infinite`,
+						animationDelay: `${Math.random() * 2}s`,
+					}}
+				>
+					<div
+						className="w-2 h-2 rounded-full blur-sm"
+						style={{
+							backgroundColor: color,
+							boxShadow: `0 0 8px ${color}, 0 0 12px ${color}`,
+						}}
+					/>
+				</div>
+			))}
+			{/* Lightning flashes */}
+			<div
+				className="absolute inset-0"
+				style={{
+					background: `linear-gradient(180deg, transparent, ${color}15)`,
+					animation: "lightning 3s ease-in-out infinite",
+				}}
+			/>
 		</div>
 	);
 }
