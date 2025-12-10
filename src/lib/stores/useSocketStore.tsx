@@ -2,9 +2,13 @@ import type { ClientEvent } from "@mikiwikipolvoron/wilco-lib/events";
 import { io, type Socket } from "socket.io-client";
 import { create } from "zustand";
 
-// const SERVER_URL = `http://localhost:4000`;
-const SERVER_URL =  import.meta.env.MODE === "production" ? "https://ws.tardy.sh" : "http://192.168.0.7:4000" ;
-console.debug(SERVER_URL)
+// Allow override via environment variable for devtunnel/custom server
+const SERVER_URL =
+	import.meta.env.VITE_SERVER_URL ||
+	(import.meta.env.MODE === "production"
+		? "https://ws.tardy.sh"
+        : "http://192.168.0.144:4000");
+console.debug("[Socket] Connecting to:", SERVER_URL);
 interface SocketStore {
 	socket: Socket | null;
 	connect: () => void;
@@ -28,7 +32,28 @@ const useSocketStore = create<SocketStore>((set, get) => ({
 			socketInstance.disconnect();
 		}
 
-		socketInstance = io(SERVER_URL);
+		console.log("[Socket] Creating new connection to:", SERVER_URL);
+		socketInstance = io(SERVER_URL, {
+			transports: ["websocket", "polling"],
+			reconnection: true,
+			reconnectionAttempts: 5,
+			reconnectionDelay: 1000,
+		});
+
+		// Add connection event listeners for debugging
+		socketInstance.on("connect", () => {
+			console.log("[Socket] ✅ Connected! Socket ID:", socketInstance?.id);
+		});
+
+		socketInstance.on("connect_error", (error) => {
+			console.error("[Socket] ❌ Connection error:", error.message);
+			console.error("[Socket] Full error:", error);
+		});
+
+		socketInstance.on("disconnect", (reason) => {
+			console.log("[Socket] Disconnected. Reason:", reason);
+		});
+
 		set({ socket: socketInstance });
 	},
 
