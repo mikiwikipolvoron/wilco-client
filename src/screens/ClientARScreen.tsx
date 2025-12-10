@@ -43,6 +43,7 @@ export default function ClientARScreen() {
 	const cameraRef = useRef<THREE.PerspectiveCamera | null>(null);
 	const rendererRef = useRef<THREE.WebGLRenderer | null>(null);
 	const itemMeshesRef = useRef<Map<string, THREE.Object3D>>(new Map());
+	const animationFrameIdRef = useRef<number | null>(null);
 
 	// Sync with server
 	useARSync();
@@ -320,7 +321,7 @@ export default function ClientARScreen() {
 
 		// Animation loop
 		const animate = () => {
-			requestAnimationFrame(animate);
+			animationFrameIdRef.current = requestAnimationFrame(animate);
 			if (rendererRef.current && sceneRef.current && cameraRef.current) {
 				rendererRef.current.render(sceneRef.current, cameraRef.current);
 			}
@@ -328,10 +329,47 @@ export default function ClientARScreen() {
 		animate();
 
 		return () => {
+			// Only remove event listener, don't dispose scene on phase changes
+			// The scene persists across phases (instructions -> anchoring -> hunting -> boss -> results)
 			window.removeEventListener("resize", handleResize);
-			renderer.dispose();
 		};
 	}, [phase]); // Re-run when phase changes so scene initializes when canvas appears
+
+	// Cleanup Three.js resources when component unmounts (leaving AR activity entirely)
+	useEffect(() => {
+		return () => {
+			// Cancel animation loop
+			if (animationFrameIdRef.current !== null) {
+				cancelAnimationFrame(animationFrameIdRef.current);
+				animationFrameIdRef.current = null;
+			}
+
+			// Dispose Three.js resources
+			if (rendererRef.current) {
+				rendererRef.current.dispose();
+			}
+
+			// Clear scene objects
+			if (sceneRef.current) {
+				sceneRef.current.traverse((object) => {
+					if (object instanceof THREE.Mesh) {
+						object.geometry?.dispose();
+						if (object.material instanceof THREE.Material) {
+							object.material.dispose();
+						}
+					}
+				});
+				sceneRef.current.clear();
+			}
+
+			// Clear refs
+			sceneRef.current = null;
+			cameraRef.current = null;
+			rendererRef.current = null;
+
+			console.log("[ARScreen] Three.js scene cleaned up on unmount");
+		};
+	}, []); // Only cleanup when component unmounts
 
 	// Update camera rotation based on device orientation
 	// Items are FIXED in world space and don't move
@@ -391,6 +429,15 @@ export default function ClientARScreen() {
 					// Animate removal (poof effect)
 					animateItemRemoval(mesh, () => {
 						scene.remove(mesh);
+						// Dispose mesh geometry and materials to prevent GPU memory leak
+						mesh.traverse((object) => {
+							if (object instanceof THREE.Mesh) {
+								object.geometry?.dispose();
+								if (object.material instanceof THREE.Material) {
+									object.material.dispose();
+								}
+							}
+						});
 						itemMeshesRef.current.delete(id);
 					});
 				}
