@@ -43,7 +43,7 @@ export function useServerSync() {
 		socket.on("connect", () => store._setConnected(true));
 		socket.on("disconnect", () => store._setConnected(false));
 		return () => {
-			socket.off("server_event");
+			socket.off("server_event", handleServerEvent);
 			socket.off("connect");
 			socket.off("disconnect");
 		};
