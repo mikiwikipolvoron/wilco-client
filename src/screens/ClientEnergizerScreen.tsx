@@ -310,10 +310,12 @@ export default function EnergizerScreen() {
 									: `linear-gradient(180deg, ${fillColor}, ${fillColor}cc)`,
 								height: `${chargePercent}%`,
 								top: "auto",
+                                opacity: "50%",
 								bottom: 0,
 								left: 0,
 								right: 0,
 								transformOrigin: "bottom",
+								zIndex: 1,
 							}}
 						/>
 						{/* Electricity sparkle animation */}
@@ -323,12 +325,13 @@ export default function EnergizerScreen() {
 								height: `${chargePercent}%`,
 								top: "auto",
 								bottom: 0,
+							zIndex: 2,
 							}}
 						>
 							<ElectricitySparkles color={fillColor} />
 						</div>
 					</div>
-					<div className="absolute inset-0 flex items-center justify-center text-5xl font-extrabold tracking-wide mix-blend-screen text-black drop-shadow-lg px-4 text-center">
+					<div className="absolute inset-0 flex items-center justify-center text-5xl font-extrabold tracking-wide mix-blend-screen z-1 text-black drop-shadow-lg px-4 text-center">
 						<p>{spotlight ? "SPOTLIGHT BONUS" : `${chargePercent}%`}</p>
 						<p>
 							<ComboLevelDisplay percentage={chargePercent} />
