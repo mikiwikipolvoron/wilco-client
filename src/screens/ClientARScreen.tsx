@@ -269,6 +269,7 @@ export default function ClientARScreen() {
 	// Initialize Three.js scene
 	useEffect(() => {
 		if (!canvasRef.current) return;
+		if (sceneRef.current) return; // Already initialized, don't recreate
 
 		console.log("[ARScreen] Initializing Three.js scene...");
 
@@ -330,7 +331,7 @@ export default function ClientARScreen() {
 			window.removeEventListener("resize", handleResize);
 			renderer.dispose();
 		};
-	}, []);
+	}, [phase]); // Re-run when phase changes so scene initializes when canvas appears
 
 	// Update camera rotation based on device orientation
 	// Items are FIXED in world space and don't move
@@ -532,7 +533,7 @@ export default function ClientARScreen() {
 
 			// Traverse up to find the item ID
 			while (current && !itemId) {
-				if (current.userData && current.userData.itemId) {
+				if (current.userData?.itemId) {
 					itemId = current.userData.itemId;
 				}
 				current = current.parent as THREE.Object3D;
@@ -668,7 +669,8 @@ export default function ClientARScreen() {
 			gyroReady &&
 			!isAnchored &&
 			!calibratedHeading &&
-			(phase === "anchoring" || (phase === "instructions" && currentSlide >= 3));
+			(phase === "anchoring" ||
+				(phase === "instructions" && currentSlide >= 3));
 
 		if (shouldShowCalibration) {
 			setShowCalibrationPrompt(true);
@@ -700,13 +702,10 @@ export default function ClientARScreen() {
 		setCalibration(currentHeading, currentBeta);
 		setShowCalibrationPrompt(false);
 
-		console.log(
-			`[AR] Calibrated and sent anchor_success:`,
-			{
-				heading: currentHeading,
-				beta: currentBeta,
-			},
-		);
+		console.log(`[AR] Calibrated and sent anchor_success:`, {
+			heading: currentHeading,
+			beta: currentBeta,
+		});
 		setDebugInfo(`Calibrated to ${currentHeading.toFixed(0)}°`);
 
 		// Anchor the player and send calibration data to server
@@ -724,11 +723,20 @@ export default function ClientARScreen() {
 		<div className="fixed inset-0 w-full h-full overflow-hidden bg-black">
 			{/* Instructions waiting screen */}
 			{phase === "instructions" && (
-				<div className="absolute inset-0 flex items-center justify-center bg-gradient-to-br from-indigo-900 via-purple-900 to-pink-900" style={{ zIndex: 100 }}>
+				<div
+					className="absolute inset-0 flex items-center justify-center bg-gradient-to-br from-indigo-900 via-purple-900 to-pink-900"
+					style={{ zIndex: 100 }}
+				>
 					<div className="bg-black/70 backdrop-blur-sm text-white px-12 py-8 rounded-2xl text-center max-w-lg border-2 border-white/30">
-						<h2 className="text-4xl font-bold mb-4">📺 AR Dressing Room Challenge</h2>
-						<p className="text-2xl mb-2">Please look at the entertainer screen</p>
-						<p className="text-xl opacity-80">Follow the instructions on the main screen</p>
+						<h2 className="text-4xl font-bold mb-4">
+							📺 AR Dressing Room Challenge
+						</h2>
+						<p className="text-2xl mb-2">
+							Please look at the entertainer screen
+						</p>
+						<p className="text-xl opacity-80">
+							Follow the instructions on the main screen
+						</p>
 					</div>
 				</div>
 			)}
@@ -783,6 +791,33 @@ export default function ClientARScreen() {
 						-{hit.value}
 					</div>
 				))}
+
+			{/* DEBUG: Show actual rendered item count */}
+			{(phase === "hunting" || phase === "boss" || phase === "anchoring") && (
+				<div
+					className="absolute top-4 right-4 bg-black/90 text-white p-3 rounded-lg font-mono text-xs leading-relaxed"
+					style={{ zIndex: 100 }}
+				>
+					<div className="font-bold mb-2 text-yellow-400">🔍 DEBUG</div>
+					<div>Store items: {items.length}</div>
+					<div className="font-bold text-green-400">
+						RENDERED: {itemMeshesRef.current.size}
+					</div>
+					<div>Scene: {sceneRef.current ? "✅" : "❌"}</div>
+					<div>
+						Calibrated:{" "}
+						{calibratedHeading !== null && calibratedBeta !== null
+							? "✅"
+							: "❌"}
+					</div>
+					{calibratedHeading !== null && (
+						<div className="text-[10px] mt-1 opacity-80">
+							H:{calibratedHeading.toFixed(0)}° B:{calibratedBeta?.toFixed(0)}
+							°
+						</div>
+					)}
+				</div>
+			)}
 
 			{/* Item Counter - Top of screen */}
 			{gyroReady &&
@@ -851,83 +886,91 @@ export default function ClientARScreen() {
 						</div>
 					)}
 
-				{cameraReady &&
-					!gyroReady &&
-					typeof (DeviceOrientationEvent as any).requestPermission ===
-						"function" && (
-						<div className="bg-black/70 text-white px-8 py-6 rounded-xl text-center max-w-md pointer-events-auto">
-							<h2 className="text-3xl font-bold mb-3">Enable Motion Sensors</h2>
-							<p className="text-xl mb-6">Tap to allow gyroscope access</p>
+					{cameraReady &&
+						!gyroReady &&
+						typeof (DeviceOrientationEvent as any).requestPermission ===
+							"function" && (
+							<div className="bg-black/70 text-white px-8 py-6 rounded-xl text-center max-w-md pointer-events-auto">
+								<h2 className="text-3xl font-bold mb-3">
+									Enable Motion Sensors
+								</h2>
+								<p className="text-xl mb-6">Tap to allow gyroscope access</p>
+								<button
+									type="button"
+									className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-8 rounded-lg text-xl"
+									onClick={() => (window as any).requestGyroPermission()}
+								>
+									Enable Gyroscope
+								</button>
+							</div>
+						)}
+
+					{!isAnchored && showCalibrationPrompt && (
+						<div className="bg-black/80 text-white px-8 py-6 rounded-xl text-center max-w-md pointer-events-auto">
+							<h2 className="text-3xl font-bold mb-3">
+								📍 Calibrate Direction
+							</h2>
+							<p className="text-xl mb-4">
+								Point your phone at the entertainer screen
+							</p>
+							<p className="text-base mb-6 opacity-80">
+								This helps position items correctly
+							</p>
 							<button
 								type="button"
-								className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-8 rounded-lg text-xl"
-								onClick={() => (window as any).requestGyroPermission()}
+								className="bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-8 rounded-lg text-xl"
+								onClick={handleCalibrate}
 							>
-								Enable Gyroscope
+								Calibrate
 							</button>
 						</div>
 					)}
 
-				{!isAnchored && showCalibrationPrompt && (
-					<div className="bg-black/80 text-white px-8 py-6 rounded-xl text-center max-w-md pointer-events-auto">
-						<h2 className="text-3xl font-bold mb-3">📍 Calibrate Direction</h2>
-						<p className="text-xl mb-4">
-							Point your phone at the entertainer screen
-						</p>
-						<p className="text-base mb-6 opacity-80">
-							This helps position items correctly
-						</p>
-						<button
-							type="button"
-							className="bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-8 rounded-lg text-xl"
-							onClick={handleCalibrate}
-						>
-							Calibrate
-						</button>
-					</div>
-				)}
+					{phase === "anchoring" && isAnchored && (
+						<div className="bg-green-600/90 text-white px-8 py-6 rounded-xl text-center max-w-md animate-pulse">
+							<h2 className="text-4xl font-bold mb-3">✅ Ready!</h2>
+							<p className="text-xl">Waiting for activity to start...</p>
+						</div>
+					)}
 
-				{phase === "anchoring" && isAnchored && (
-					<div className="bg-green-600/90 text-white px-8 py-6 rounded-xl text-center max-w-md animate-pulse">
-						<h2 className="text-4xl font-bold mb-3">✅ Ready!</h2>
-						<p className="text-xl">Waiting for activity to start...</p>
-					</div>
-				)}
+					{phase === "hunting" && items.length === 0 && (
+						<div className="bg-black/70 text-white px-8 py-6 rounded-xl text-center max-w-md">
+							<h2 className="text-3xl font-bold mb-3">🎯 Look Around!</h2>
+							<p className="text-xl">Rotate your phone to find items</p>
+						</div>
+					)}
 
-				{phase === "hunting" && items.length === 0 && (
-					<div className="bg-black/70 text-white px-8 py-6 rounded-xl text-center max-w-md">
-						<h2 className="text-3xl font-bold mb-3">🎯 Look Around!</h2>
-						<p className="text-xl">Rotate your phone to find items</p>
-					</div>
-				)}
-
-				{phase === "hunting" && items.length > 0 && (
-					<div className="bg-black/70 text-white px-6 py-4 rounded-xl text-center">
-						{items.some((item) => item.type === "boss") ? (
-							<>
-								<p className="text-2xl font-bold text-red-400">
-									🔥 BOSS APPEARED!
-								</p>
-								<p className="text-lg mt-2">Point toward entertainer screen!</p>
-								<p className="text-sm mt-1">Everyone must attack together!</p>
-							</>
-						) : (
-							<>
-								<p className="text-2xl font-bold">Rotate to find items!</p>
-								<p className="text-lg mt-2">Tap directly on any item you see</p>
-							</>
-						)}
-					</div>
-				)}
-				{phase === "results" && (
-					<div className="bg-black/70 text-white px-6 py-4 rounded-xl text-center">
+					{phase === "hunting" && items.length > 0 && (
+						<div className="bg-black/70 text-white px-6 py-4 rounded-xl text-center">
+							{items.some((item) => item.type === "boss") ? (
+								<>
+									<p className="text-2xl font-bold text-red-400">
+										🔥 BOSS APPEARED!
+									</p>
+									<p className="text-lg mt-2">
+										Point toward entertainer screen!
+									</p>
+									<p className="text-sm mt-1">Everyone must attack together!</p>
+								</>
+							) : (
+								<>
+									<p className="text-2xl font-bold">Rotate to find items!</p>
+									<p className="text-lg mt-2">
+										Tap directly on any item you see
+									</p>
+								</>
+							)}
+						</div>
+					)}
+					{phase === "results" && (
+						<div className="bg-black/70 text-white px-6 py-4 rounded-xl text-center">
 							<p className="text-2xl font-bold text-red-400">
 								👑 BOSS DEFEATED 👑!
 							</p>
 							<p className="text-lg mt-2">Point toward entertainer screen!</p>
 							<p className="text-sm mt-1">Everyone must attack together!</p>
-					</div>
-				)}
+						</div>
+					)}
 				</div>
 			)}
 		</div>
