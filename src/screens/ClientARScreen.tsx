@@ -767,8 +767,7 @@ export default function ClientARScreen() {
 				<div
 					className="absolute inset-0 w-full h-full"
 					style={{ zIndex: 20 }}
-					onClick={handleScreenTap}
-					onTouchStart={handleScreenTap}
+					onPointerDown={handleScreenTap}
 					onKeyDown={handleTapOverlayKeyDown}
 					role="button"
 					tabIndex={0}
@@ -940,7 +939,7 @@ export default function ClientARScreen() {
 						</div>
 					)}
 
-					{phase === "hunting" && items.length > 0 && (
+					{((phase === "hunting" && items.length > 0) || (phase === "boss" && items.some((item) => item.type === "boss"))) && (
 						<div className="bg-black/70 text-white px-6 py-4 rounded-xl text-center">
 							{items.some((item) => item.type === "boss") ? (
 								<>
