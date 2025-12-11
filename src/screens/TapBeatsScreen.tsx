@@ -81,6 +81,7 @@ export default function TapBeatsScreen() {
 				>
 					<img
 						src={`${import.meta.env.BASE_URL}${tapAnimation ? "zara" : "zara_outline"}.png`}
+                        className="object-contain transition-all"
 						alt="Tap Animation"
 					/>
 				</div>
