@@ -79,7 +79,10 @@ export default function TapBeatsScreen() {
 							: `0 0 30px ${myColor}`,
 					}}
 				>
-					TAP
+					<img
+						src={`${import.meta.env.BASE_URL}${tapAnimation ? "zara" : "zara_outline"}.png`}
+						alt="Tap Animation"
+					/>
 				</div>
 			</div>
 
