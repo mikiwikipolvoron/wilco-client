@@ -6,7 +6,7 @@
       "name": "wilco-client",
       "dependencies": {
         "@ar-js-org/ar.js": "^3.4.7",
-        "@mikiwikipolvoron/wilco-lib": "^1.5.0",
+        "@mikiwikipolvoron/wilco-lib": "^1.6.0",
         "@tailwindcss/vite": "^4.1.17",
         "howler": "^2.2.4",
         "react": "^19.2.0",
@@ -143,7 +143,7 @@
 
     "@jridgewell/trace-mapping": ["@jridgewell/trace-mapping@0.3.31", "", { "dependencies": { "@jridgewell/resolve-uri": "^3.1.0", "@jridgewell/sourcemap-codec": "^1.4.14" } }, "sha512-zzNR+SdQSDJzc8joaeP8QQoCQr8NuYx2dIIytl1QeBEZHJ9uW6hebsrYgbz8hJwUQao3TWCMtmfV8Nu1twOLAw=="],
 
-    "@mikiwikipolvoron/wilco-lib": ["@mikiwikipolvoron/wilco-lib@1.5.0", "https://npm.pkg.github.com/download/@mikiwikipolvoron/wilco-lib/1.5.0/97753a27340401d76c13176037ba235d528e6452", { "peerDependencies": { "typescript": "^5" } }, "sha512-3O0VYjLEklXWgmoWF2CctUzleumF+O6UImJfQoJorxOwgVZ2wA69laY25KVyCyKMUROAdz8zs7lfUMCNdb+J3A=="],
+    "@mikiwikipolvoron/wilco-lib": ["@mikiwikipolvoron/wilco-lib@1.6.0", "https://npm.pkg.github.com/download/@mikiwikipolvoron/wilco-lib/1.6.0/22dfeb6209a28cc817996c62999d065e4cdd93b3", { "peerDependencies": { "typescript": "^5" } }, "sha512-vzLlo0FYoXL0PvW+qTpClskmM7yifyDLoW95nwqoO59m920fd69VWafGFExmQnaLBqVIVZcGIQR1OvNmHbQy7g=="],
 
     "@napi-rs/wasm-runtime": ["@napi-rs/wasm-runtime@1.0.7", "", { "dependencies": { "@emnapi/core": "^1.5.0", "@emnapi/runtime": "^1.5.0", "@tybys/wasm-util": "^0.10.1" } }, "sha512-SeDnOO0Tk7Okiq6DbXmmBODgOAb9dp9gjlphokTUxmt8U3liIP1ZsozBahH69j/RJv+Rfs6IwUKHTgQYJ/HBAw=="],
 

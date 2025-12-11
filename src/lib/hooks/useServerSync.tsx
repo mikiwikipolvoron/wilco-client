@@ -24,6 +24,11 @@ export function useServerSync() {
 			switch (event.type) {
 				case "player_joined":
 					store._handlePlayerJoined(event.player);
+					// Set connected to true when we successfully register
+					// (server sends player_joined event after registration)
+					if (event.player.id === socket.id) {
+						store._setConnected(true);
+					}
 					break;
 				case "player_left":
 					store._handlePlayerLeft(event.playerId);
@@ -40,7 +45,8 @@ export function useServerSync() {
 		};
 
 		socket.on("server_event", handleServerEvent);
-		socket.on("connect", () => store._setConnected(true));
+		// Note: Don't set connected on socket connect - wait for player_joined event
+		// This ensures we only show activity screens after successful registration
 		socket.on("disconnect", () => store._setConnected(false));
 		return () => {
 			socket.off("server_event", handleServerEvent);
