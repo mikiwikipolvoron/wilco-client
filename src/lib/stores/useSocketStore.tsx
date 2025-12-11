@@ -7,7 +7,8 @@ const SERVER_URL =
 	import.meta.env.VITE_SERVER_URL ||
 	(import.meta.env.MODE === "production"
 		? "https://ws.tardy.sh"
-        : "http://192.168.0.144:4000");
+        // : "http://192.168.0.144:4000");
+        : "https://id-4000.euw.devtunnels.ms");
 console.debug("[Socket] Connecting to:", SERVER_URL);
 interface SocketStore {
 	socket: Socket | null;
