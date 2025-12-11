@@ -310,14 +310,28 @@ export default function EnergizerScreen() {
 									: `linear-gradient(180deg, ${fillColor}, ${fillColor}cc)`,
 								height: `${chargePercent}%`,
 								top: "auto",
-                                opacity: "50%",
+								opacity: "30%",
 								bottom: 0,
 								left: 0,
 								right: 0,
 								transformOrigin: "bottom",
 								zIndex: 1,
 							}}
-						/>
+						>
+                            {/* TODO: AI REVIEW */}
+							<h3
+								className="text-3xl text-center -top-30 bottom-auto"
+								style={{
+									color: spotlight
+										? "linear-gradient(180deg, #000000, #000000ee)"
+										: `linear-gradient(180deg, ${fillColor}, ${fillColor}cc)`,
+									transformOrigin: "top",
+									zIndex: 2,
+								}}
+							>
+								{chargePercent}%
+							</h3>
+						</div>
 						{/* Electricity sparkle animation */}
 						<div
 							className="absolute inset-0 pointer-events-none"
@@ -325,7 +339,7 @@ export default function EnergizerScreen() {
 								height: `${chargePercent}%`,
 								top: "auto",
 								bottom: 0,
-							zIndex: 2,
+								zIndex: 2,
 							}}
 						>
 							<ElectricitySparkles color={fillColor} />
