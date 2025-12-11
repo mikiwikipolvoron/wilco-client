@@ -40,10 +40,10 @@ const FALLBACK_INSTRUMENTS: Record<InstrumentId, InstrumentInfo> = {
 };
 
 const INSTRUMENT_IMAGES: Partial<Record<InstrumentId, string>> = {
-	drums: "/assets/drumstick.png",
-	maracas: "/assets/maraca.png",
-	guitar: "/assets/guitarpick.png",
-	violin: "/assets/violinbow.png",
+	drums: `${import.meta.env.BASE_URL}assets/drumstick.png`,
+	maracas: `${import.meta.env.BASE_URL}assets/maraca.png`,
+	guitar: `${import.meta.env.BASE_URL}assets/guitarpick.png`,
+	violin: `${import.meta.env.BASE_URL}assets/violinbow.png`,
 };
 
 export default function InstrumentsScreen() {

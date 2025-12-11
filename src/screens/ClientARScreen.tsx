@@ -52,14 +52,14 @@ export default function ClientARScreen() {
 	useEffect(() => {
 		// Load item tap sound (use a pop/collect sound)
 		itemTapSoundRef.current = new Howl({
-			src: ["/sounds/beam_sound-103367.mp3"],
+			src: [`${import.meta.env.BASE_URL}sounds/beam_sound-103367.mp3`],
 			volume: 0.8,
 			preload: true,
 		});
 
 		// Load boss tap sound (use a hit/damage sound)
 		bossTapSoundRef.current = new Howl({
-			src: ["/sounds/damage.mp3"],
+			src: [`${import.meta.env.BASE_URL}sounds/damage.mp3`],
 			volume: 0.6,
 			preload: true,
 		});
@@ -449,7 +449,7 @@ export default function ClientARScreen() {
 		const item = newItem;
 
 		loader.load(
-			"/models/orchid/scene.gltf",
+			`${import.meta.env.BASE_URL}models/orchid/scene.gltf`,
 			(gltf) => {
 				const model = gltf.scene;
 
@@ -924,11 +924,16 @@ export default function ClientARScreen() {
 						zIndex: 9999,
 					}}
 				>
+					{/* Camera permission hint - bottom of screen */}
 					{!cameraReady && (
-						<div className="bg-black/70 text-white px-8 py-6 rounded-xl text-center max-w-md">
-							<div className="animate-spin rounded-full h-16 w-16 border-b-2 border-white mx-auto mb-4" />
-							<h2 className="text-3xl font-bold mb-3">Starting Camera...</h2>
-							<p className="text-xl">Please allow camera access</p>
+						<div
+							className="bg-black/70 text-white px-6 py-3 rounded-lg text-center"
+							style={{
+								position: "absolute",
+								bottom: "2rem",
+							}}
+						>
+							<p className="text-base">Please allow camera access if prompted</p>
 						</div>
 					)}
 
