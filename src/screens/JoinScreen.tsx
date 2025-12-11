@@ -12,9 +12,24 @@ function JoinScreen() {
 	function handleJoin(event: React.FormEvent) {
 		if (!nickname) return;
 		event.preventDefault();
-		socket.connect();
-		act.register(nickname);
+
 		console.log("Joining as:", nickname);
+
+		// If socket is already connected, register immediately
+		if (socket.socket?.connected) {
+			act.register(nickname);
+			return;
+		}
+
+		// Otherwise, wait for connection before registering
+		const onConnect = () => {
+			console.log("[JoinScreen] Socket connected, registering...");
+			act.register(nickname);
+			socket.socket?.off("connect", onConnect); // Clean up listener
+		};
+
+		socket.socket?.on("connect", onConnect);
+		socket.connect();
 	}
 
 	return (
@@ -27,7 +42,7 @@ function JoinScreen() {
 					Enter a nickname to join the pre-concert experience.
 				</p>
 
-				<form onSubmit={handleJoin}>
+				<form onSubmit={(e) => handleJoin(e)}>
 					<input
 						type="text"
 						placeholder="Your nickname"
