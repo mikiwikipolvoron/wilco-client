@@ -717,7 +717,7 @@ export default function ClientARScreen() {
 			!isAnchored &&
 			!calibratedHeading &&
 			(phase === "anchoring" ||
-				(phase === "instructions" && currentSlide >= 3));
+				(phase === "instructions" && currentSlide > 3));
 
 		if (shouldShowCalibration) {
 			setShowCalibrationPrompt(true);
